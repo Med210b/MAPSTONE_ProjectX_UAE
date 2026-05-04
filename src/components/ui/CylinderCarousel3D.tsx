@@ -10,12 +10,10 @@ interface CylinderCarousel3DProps {
 }
 
 export function CylinderCarousel3D({ images, className = "", onImageClick, onActiveIndexChange }: CylinderCarousel3DProps) {
-  // FIX 1: Track absolute rotation to allow infinite scrolling without rewinding
   const [rotationIndex, setRotationIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [validImages, setValidImages] = useState<string[]>(images);
   
-  // Filter valid images and strictly remove broken or placeholder-like strings
   const displayImages = validImages.filter(img => 
     img && 
     img.trim() !== '' && 
@@ -27,21 +25,15 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
   const itemCount = Math.max(displayImages.length, 1);
   const angleStep = 360 / itemCount;
 
-  // Derive the visual current index safely for UI elements (handles negative numbers)
   const currentIndex = ((rotationIndex % itemCount) + itemCount) % itemCount;
 
-  // Motion values for interaction
   const x = useMotionValue(0);
   const springX = useSpring(x, { stiffness: 100, damping: 30 });
-  
-  // FIX 2: Explicitly add 'deg' to ensure browser compatibility with 3D transforms
   const rotationY = useTransform(springX, (val) => `${val}deg`);
 
-  // Responsive Radius & Heights
   const [radius, setRadius] = useState(250);
   const [containerHeight, setContainerHeight] = useState(500);
   
-  // Filter valid images and reset index when images change
   useEffect(() => {
     const initialFiltered = images.filter(img => 
       img && 
@@ -64,9 +56,10 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       const width = window.innerWidth;
       const height = window.innerHeight;
       
+      // FIX: Increased radius and height for mobile to support larger images
       if (width < 640) {
-        setRadius(140);
-        setContainerHeight(380); 
+        setRadius(170); 
+        setContainerHeight(460); 
       } else if (width < 1024) {
         setRadius(240);
         setContainerHeight(Math.min(height * 0.6, 500));
@@ -81,7 +74,6 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Use absolute rotation index
   const rotateTo = (newRotationIndex: number) => {
     setRotationIndex(newRotationIndex);
     const safeIndex = ((newRotationIndex % itemCount) + itemCount) % itemCount;
@@ -89,11 +81,9 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
     x.set(-newRotationIndex * angleStep);
   };
 
-  // Continuous infinite scrolling functions
   const handleNext = () => rotateTo(rotationIndex + 1);
   const handlePrev = () => rotateTo(rotationIndex - 1);
 
-  // Shortest path dot navigation calculation
   const handleDotClick = (targetIndex: number) => {
     const diff = targetIndex - currentIndex;
     rotateTo(rotationIndex + diff);
@@ -108,13 +98,11 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
         height: `${containerHeight}px`
       }}
     >
-      {/* Immersive Lighting Background */}
       <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden pointer-events-none">
         <div className="w-[1000px] h-[500px] bg-brand-gold/5 blur-[150px] rounded-full rotate-45 transform -translate-y-1/2" />
         <div className="w-[800px] h-[400px] bg-brand-gold/5 blur-[100px] rounded-full -rotate-12 transform translate-y-1/2" />
       </div>
 
-      {/* 3D Container */}
       <motion.div 
         style={{ 
           rotateY: rotationY,
@@ -127,9 +115,10 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
           const threshold = 50;
           if (info.offset.x > threshold) handlePrev();
           else if (info.offset.x < -threshold) handleNext();
-          else rotateTo(rotationIndex); // Snap back to current rotation
+          else rotateTo(rotationIndex); 
         }}
-        className="relative w-32 h-[240px] sm:w-56 sm:h-72 md:w-80 md:h-[480px] cursor-grab active:cursor-grabbing"
+        // FIX: Changed mobile sizes from w-32/h-240px to w-56/h-360px for a massive full-size look
+        className="relative w-56 h-[360px] sm:w-64 sm:h-[400px] md:w-80 md:h-[480px] cursor-grab active:cursor-grabbing"
       >
         {displayImages.map((img, i) => {
           const isFront = i === currentIndex;
@@ -146,7 +135,6 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
               whileHover={isFront ? { scale: 1.02 } : {}}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
-              {/* Image Container */}
               <div 
                 className="w-full h-full relative cursor-pointer"
                 onClick={() => isFront && onImageClick?.(img)}
@@ -159,10 +147,8 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
                   className={`w-full h-full object-cover transition-all duration-700 ${isFront ? 'opacity-100 scale-100' : 'opacity-40 scale-95 grayscale-[30%]'}`} 
                 />
                 
-                {/* Surface Shine */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-brand-gold/10 via-transparent to-transparent opacity-40 pointer-events-none" />
                 
-                {/* Interactive State Icons */}
                 {isFront && (
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-[#0A1A2F]/60 backdrop-blur-[4px]">
                     <motion.div 
@@ -181,7 +167,6 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
                 )}
               </div>
 
-              {/* Advanced Reflection with Dynamic Fade */}
               <div 
                 className="absolute top-[102%] left-0 right-0 h-full opacity-20 pointer-events-none"
                 style={{ 
@@ -197,7 +182,6 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
         })}
       </motion.div>
 
-      {/* Navigation Controls */}
       <div className="absolute bottom-6 flex gap-4 z-50">
         <motion.button 
           whileHover={{ scale: 1.1 }}
@@ -228,7 +212,6 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
         </motion.button>
       </div>
 
-      {/* Side Vignettes */}
       <div className="absolute inset-y-0 left-0 w-12 sm:w-32 bg-gradient-to-r from-black/60 to-transparent pointer-events-none z-10" />
       <div className="absolute inset-y-0 right-0 w-12 sm:w-32 bg-gradient-to-l from-black/60 to-transparent pointer-events-none z-10" />
     </div>
