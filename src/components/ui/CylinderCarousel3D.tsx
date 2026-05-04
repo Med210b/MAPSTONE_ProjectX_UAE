@@ -27,7 +27,8 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
   const currentIndex = ((rotationIndex % itemCount) + itemCount) % itemCount;
 
   const x = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 100, damping: 30 });
+  // FIX 1: Increased stiffness and lowered damping for a much snappier, faster rotation
+  const springX = useSpring(x, { stiffness: 200, damping: 25 });
   const rotationY = useTransform(springX, (val) => `${val}deg`);
 
   const [radius, setRadius] = useState(400);
@@ -58,7 +59,6 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       if (width < 640) {
         const itemWidth = 260; 
         setRadius(Math.max(350, (itemWidth / 2) / Math.tan(Math.PI / itemCount) + 40)); 
-        // FIX: Increased mobile height to 540px to give buttons breathing room
         setContainerHeight(540); 
       } else if (width < 1024) {
         const itemWidth = 320; 
@@ -113,14 +113,22 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
         }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1}
+        dragElastic={0.4} // FIX 2: Made the drag feel more elastic and responsive to touch
         onDragEnd={(_, info) => {
-          const threshold = 30; 
-          if (info.offset.x > threshold) handlePrev();
-          else if (info.offset.x < -threshold) handleNext();
-          else rotateTo(rotationIndex); 
+          // FIX 3: Added velocity tracking so quick flicks work instantly
+          const isFlick = Math.abs(info.velocity.x) > 250;
+          const isFar = Math.abs(info.offset.x) > 30;
+          
+          if (info.velocity.x > 250 || (isFar && info.offset.x > 0)) {
+             handlePrev();
+          } else if (info.velocity.x < -250 || (isFar && info.offset.x < 0)) {
+             handleNext();
+          } else {
+             rotateTo(rotationIndex); 
+          }
         }}
-        className="relative w-[260px] h-[380px] sm:w-[320px] sm:h-[450px] md:w-[400px] md:h-[500px] cursor-grab active:cursor-grabbing"
+        // Added touch-pan-y so vertical scrolling isn't interrupted by the carousel
+        className="relative w-[260px] h-[380px] sm:w-[320px] sm:h-[450px] md:w-[400px] md:h-[500px] cursor-grab active:cursor-grabbing touch-pan-y"
       >
         {displayImages.map((img, i) => {
           const isFront = i === currentIndex;
@@ -184,7 +192,6 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
         })}
       </motion.div>
 
-      {/* FIX: Moved buttons slightly higher (bottom-4) and added translateZ(150px) to force them in front of 3D images */}
       <div 
         className="absolute bottom-4 sm:bottom-6 flex gap-4 z-[100]"
         style={{ transform: "translateZ(150px)" }}
@@ -192,17 +199,17 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
         <motion.button 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={handlePrev} 
-          className="p-3 sm:p-4 bg-[#152A47]/80 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/30 hover:border-brand-gold transition-all shadow-2xl"
+          onClick={(e) => { e.stopPropagation(); handlePrev(); }} // FIX 4: Prevent drag conflicts when clicking
+          className="p-3 sm:p-4 bg-[#152A47]/80 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/30 hover:border-brand-gold transition-all shadow-2xl pointer-events-auto"
         >
           <ChevronLeft size={20} className="sm:w-[28px] sm:h-[28px]" />
         </motion.button>
         
-        <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 bg-[#152A47]/80 backdrop-blur-xl rounded-full border border-brand-gold/20 shadow-2xl">
+        <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 bg-[#152A47]/80 backdrop-blur-xl rounded-full border border-brand-gold/20 shadow-2xl pointer-events-auto">
           {displayImages.map((_, i) => (
             <button
               key={i}
-              onClick={() => handleDotClick(i)}
+              onClick={(e) => { e.stopPropagation(); handleDotClick(i); }} // FIX 4: Prevent drag conflicts
               className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-brand-gold w-4 sm:w-6 shadow-[0_0_8px_rgba(200,169,106,0.5)]' : 'bg-brand-gold/30'}`}
             />
           ))}
@@ -211,8 +218,8 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
         <motion.button 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={handleNext} 
-          className="p-3 sm:p-4 bg-[#152A47]/80 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/30 hover:border-brand-gold transition-all shadow-2xl"
+          onClick={(e) => { e.stopPropagation(); handleNext(); }} // FIX 4: Prevent drag conflicts
+          className="p-3 sm:p-4 bg-[#152A47]/80 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/30 hover:border-brand-gold transition-all shadow-2xl pointer-events-auto"
         >
           <ChevronRight size={20} className="sm:w-[28px] sm:h-[28px]" />
         </motion.button>
