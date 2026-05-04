@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, MapPin, Building2, Calendar, CheckCircle2, Navigation, ExternalLink, ShieldCheck, FileDown, Ruler, Share2, Bed, LayoutGrid } from 'lucide-react';
 import { Project } from '../../data/projects';
 import { motion, AnimatePresence } from 'motion/react';
@@ -13,19 +13,23 @@ interface ProjectDetailsProps {
 }
 
 export function ProjectDetails({ project, onClose, onDownloadPdf }: ProjectDetailsProps) {
-  const mainImage = project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/'))
-    ? project.imageUrl 
-    : getProjectImageUrl(project.name);
-    
   const { formatPrice, formatArea, currency, setCurrency } = usePreferences();
   
-  const baseGallery = [
-    mainImage,
-    ...(project.galleryUrls || []),
-    ...getProjectGalleryUrls(project.name, mainImage, 8)
-  ];
+  // FIX: Memoize images so they don't recreate on every render
+  const mainImage = useMemo(() => {
+    return project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/'))
+      ? project.imageUrl 
+      : getProjectImageUrl(project.name);
+  }, [project.imageUrl, project.name]);
     
-  const gallery = Array.from(new Set(baseGallery.filter(img => img && img.trim() !== '')));
+  const gallery = useMemo(() => {
+    const baseGallery = [
+      mainImage,
+      ...(project.galleryUrls || []),
+      ...getProjectGalleryUrls(project.name, mainImage, 8)
+    ];
+    return Array.from(new Set(baseGallery.filter(img => img && img.trim() !== '')));
+  }, [project.name, project.galleryUrls, mainImage]);
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeFullscreenImage, setActiveFullscreenImage] = useState<string | null>(null);
@@ -83,7 +87,7 @@ export function ProjectDetails({ project, onClose, onDownloadPdf }: ProjectDetai
             onActiveIndexChange={setActiveImageIndex}
           />
           
-          {/* Subtle Project Info - Desktop only, moved to top to avoid overlap with carousel center */}
+          {/* Subtle Project Info */}
           <div className="absolute top-8 left-8 hidden lg:block pointer-events-none z-10">
             <motion.div
               initial={{ opacity: 0, x: -20 }}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, MapPin, Building2, Calendar, Ruler, CreditCard, ChevronRight, Heart, FileDown } from 'lucide-react';
 import { Project } from '../../data/projects';
 import { motion, AnimatePresence } from 'motion/react';
@@ -38,20 +38,26 @@ export const QuickView: React.FC<QuickViewProps> = ({ project, onClose, onViewFu
     }
   };
 
-  if (!project) return null;
+  // FIX: Memoize images here too
+  const mainImage = useMemo(() => {
+    if (!project) return '';
+    return project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/'))
+      ? project.imageUrl 
+      : getProjectImageUrl(project.name);
+  }, [project]);
+  
+  const gallery = useMemo(() => {
+    if (!project) return [];
+    const baseGallery = [
+      mainImage,
+      ...(project.galleryUrls || []),
+      ...getProjectGalleryUrls(project.name, mainImage, 8)
+    ];
+    return Array.from(new Set(baseGallery.filter(img => img && img.trim() !== '')));
+  }, [project, mainImage]);
 
+  if (!project) return null;
   const isFavorite = appUser?.favorites?.includes(project.id);
-  const mainImage = project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/'))
-    ? project.imageUrl 
-    : getProjectImageUrl(project.name);
-  
-  const baseGallery = [
-    mainImage,
-    ...(project.galleryUrls || []),
-    ...getProjectGalleryUrls(project.name, mainImage, 8)
-  ];
-  
-  const gallery = Array.from(new Set(baseGallery.filter(img => img && img.trim() !== '')));
 
   return (
     <AnimatePresence>
