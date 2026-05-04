@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Playfair+Display+SC:wght@400;700;900&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@font-face {
+  font-family: "TNR-Numbers";
+  src: local("Times New Roman");
+  unicode-range: U+0030-0039, U+002C, U+002E, U+002B, U+002D; /* Digits 0-9, comma, dot, plus, minus */
+}
+
+@theme {
+  --font-sans: "TNR-Numbers", "Times New Roman", Times, serif;
+  --font-heading: "TNR-Numbers", "Playfair Display", "Times New Roman", serif;
+  
+  --color-brand-gold: #C8A96A;
+  --color-brand-gold-light: #E5C07B;
+  --color-brand-gold-dark: #A67C3D;
+  --color-brand-blue-deep: #0A1A2F;
+  --color-brand-blue-dark: #02060D;
+  
+  --color-background: var(--color-brand-blue-dark);
+  --color-foreground: #EDEDED;
+}
+
+@layer base {
+  body {
+    @apply text-[#EDEDED] font-sans antialiased overflow-x-hidden text-[13px] md:text-sm;
+    background: linear-gradient(180deg, #0A1A2F 0%, #02060D 100%);
+    line-height: 1.5;
+    top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading uppercase tracking-[1px] md:tracking-[2px];
+  }
+
+  html {
+    margin-top: 0 !important;
+  }
+  
+  .VIpgJd-Zvi9od-ORHb-OEVmcd,
+  .VIpgJd-Zvi9od-aZ2wEe-wOHMyf,
+  .goog-te-banner-frame.skiptranslate,
+  .goog-te-banner-frame,
+  #goog-gt-tt,
+  .goog-te-balloon-frame,
+  .skiptranslate > iframe.goog-te-banner-frame {
+    display: none !important;
+  }
+
+  html.light-mode {
+    filter: invert(1) hue-rotate(180deg);
+    background-color: #fff;
+  }
+
+  html.light-mode img:not(.no-invert),
+  html.light-mode video:not(.no-invert),
+  html.light-mode iframe:not(.no-invert),
+  html.light-mode canvas:not(.no-invert) {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  html.light-mode .keep-dark {
+    filter: invert(1) hue-rotate(180deg) !important;
+    background-color: #0b101b !important;
+    color: #ffffff !important;
+  }
+
+  html.light-mode .keep-dark img,
+  html.light-mode .keep-dark video,
+  html.light-mode .keep-dark iframe,
+  html.light-mode .keep-dark canvas {
+    filter: none !important;
+  }
+}
+
+@layer utilities {
+  .luxury-panel {
+    @apply bg-[#0D253F]/40 backdrop-blur-xl border border-brand-gold/20 shadow-[0_8px_32px_rgba(0,0,0,0.5)];
+  }
+  
+  .luxury-card {
+    @apply bg-[#152A47]/40 backdrop-blur-md border border-white/5 shadow-[0_8px_20px_rgba(0,0,0,0.25)] rounded-2xl;
+  }
+  
+  .luxury-button-primary {
+    @apply bg-gradient-to-br from-brand-gold-light via-brand-gold to-brand-gold-dark text-brand-blue-dark font-black uppercase tracking-widest shadow-[0_4px_15px_rgba(200,169,106,0.2)] hover:shadow-[0_8px_25px_rgba(200,169,106,0.4)] transition-all duration-300;
+  }
+  
+  .luxury-button-secondary {
+    @apply border border-brand-gold text-brand-gold uppercase tracking-widest hover:bg-brand-gold hover:text-brand-blue-dark transition-all duration-300;
+  }
+
+  .gold-gradient-text {
+    background: linear-gradient(135deg, #C8A96A 0%, #E5C07B 50%, #A67C3D 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    @apply drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)];
+  }
+  
+  .luxury-heading {
+    @apply font-heading uppercase tracking-[2px];
+    background: linear-gradient(135deg, #C8A96A 0%, #E5C07B 50%, #A67C3D 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  
+  .map-grid-bg {
+    background-size: 30px 30px;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.4) 0.5px, transparent 0.5px);
+  }
+
+  .retro-grid-container {
+    @apply pointer-events-none fixed inset-0 z-0 overflow-hidden bg-brand-blue-dark opacity-40;
+  }
+
+  .retro-grid {
+    background-image: 
+      radial-gradient(rgba(197, 160, 89, 0.15) 1px, transparent 1px);
+    background-size: 40px 40px;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    inset: 0;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* React Leaflet Tooltip Styles */
+  .leaflet-tooltip-pane {
+    z-index: 650;
+  }
+  
+  .custom-map-tooltip.leaflet-tooltip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  
+  .custom-map-tooltip.leaflet-tooltip-top:before {
+    display: none !important;
+  }
+}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProjectX UAE</title>
+    <style>
+      .goog-te-banner-frame.skiptranslate, .goog-te-banner-frame {
+        display: none !important;
+        visibility: hidden !important;
+      }
+      body, html {
+        top: 0 !important;
+        position: static !important;
+      }
+      .VIpgJd-Zvi9od-ORHb-OEVmcd, .skiptranslate iframe, iframe.skiptranslate {
+        display: none !important;
+      }
+      #goog-gt-tt, .goog-te-balloon-frame {
+        display: none !important;
+      }
+      .goog-text-highlight {
+        background: none !important;
+        box-shadow: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="google_translate_element" style="display:none;"></div>
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
+      }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script>
+      // Clean up Google Translate DOM elements continuously
+      const observer = new MutationObserver(() => {
+        const banners = document.querySelectorAll('.skiptranslate, iframe.skiptranslate');
+        banners.forEach(banner => {
+          if (banner.tagName.toLowerCase() === 'iframe') {
+            banner.style.display = 'none';
+          }
+        });
+        if (document.body.style.top) {
+          document.body.style.top = '0px';
+        }
+        if (document.documentElement.style.top) {
+          document.documentElement.style.top = '0px';
+        }
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email in ['mohamedbentaher66@gmail.com', 'contact@mapstonegroup.com']
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Helpers ---
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['displayName', 'email']) &&
+             data.displayName is string && data.displayName.size() <= 200 &&
+             data.email is string && data.email.size() <= 200 &&
+             (data.get('photoURL', '') is string && data.get('photoURL', '').size() <= 2000) &&
+             (data.get('reraNumber', '') is string && data.get('reraNumber', '').size() <= 100) &&
+             (data.get('companyName', '') is string && data.get('companyName', '').size() <= 200) &&
+             (data.get('phoneNumber', '') is string && data.get('phoneNumber', '').size() <= 100) &&
+             (data.get('favorites', []) is list) &&
+             (data.get('updatedAt', '') is string) &&
+             (data.get('isVerifiedAgent', false) is bool);
+    }
+
+    function isValidNewUser(data) {
+      return data.keys().hasAll(['displayName', 'email']) &&
+             data.displayName is string &&
+             data.email is string &&
+             (data.get('favorites', []) is list) &&
+             (data.get('createdAt', '') is string);
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll(['name', 'description', 'emirate', 'area', 'startingPrice', 'handover', 'imageUrl', 'developer', 'beds', 'mapCoordinates', 'unitTypes', 'amenities', 'priceAED', 'totalAreaSqFt', 'paymentPlan']) &&
+             data.name is string && data.name.size() <= 200 &&
+             data.description is string && data.description.size() <= 5000 &&
+             data.emirate is string &&
+             data.area is string &&
+             data.startingPrice is string &&
+             data.handover is string &&
+             data.imageUrl is string &&
+             data.developer is string &&
+             data.beds is string &&
+             data.mapCoordinates is map &&
+             data.mapCoordinates.lat is number &&
+             data.mapCoordinates.lng is number &&
+             data.unitTypes is list &&
+             data.amenities is list &&
+             data.priceAED is number &&
+             data.totalAreaSqFt is number &&
+             data.paymentPlan is string &&
+             (data.get('isVerifiedAgent', false) is bool) &&
+             (data.get('createdAt', '') is string) &&
+             (data.get('updatedAt', '') is string);
+    }
+
+    function isValidDeveloper(data) {
+      return data.keys().hasAll(['name']) &&
+             data.name is string && data.name.size() <= 100 &&
+             (data.get('logoUrl', '') is string && data.get('logoUrl', '').size() <= 1000);
+    }
+
+    // --- Collection Routes ---
+
+    // Allow connection tests
+    match /_connection_test_/{docId} {
+      allow read: if true;
+    }
+
+    match /admins/{userId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidNewUser(incoming());
+      allow update: if isOwner(userId) && (
+        isAdmin() || 
+        (isValidUser(incoming()) && 
+         incoming().email == existing().email &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'reraNumber', 'companyName', 'phoneNumber', 'updatedAt', 'isVerifiedAgent', 'favorites']))
+      );
+    }
+
+    match /developers/{developerId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidDeveloper(incoming());
+    }
+
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidProject(incoming());
+    }
+  }
+}

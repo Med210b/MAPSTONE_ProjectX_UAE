@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "Admin": {
+      "title": "Admin",
+      "description": "System administrators",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "Admin email associated with this UID" }
+      }
+    },
+    "Developer": {
+      "title": "Developer",
+      "description": "A real estate developer",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["name"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A real estate project",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "emirate": { "type": "string" },
+        "area": { "type": "string" },
+        "startingPrice": { "type": "string" },
+        "handover": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "developer": { "type": "string" },
+        "beds": { "type": "string" },
+        "priceAED": { "type": "number" },
+        "totalAreaSqFt": { "type": "number" },
+        "paymentPlan": { "type": "string" },
+        "mapCoordinates": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "unitTypes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "propertyType": { "type": "string" },
+              "beds": { "type": "string" },
+              "price": { "type": "string" }
+            }
+          }
+        },
+        "amenities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "isVerifiedAgent": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "description", "emirate", "area", "startingPrice", "handover", "imageUrl", "developer", "beds", "mapCoordinates", "unitTypes", "amenities"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profiles",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "reraNumber": { "type": "string" },
+        "companyName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "isVerifiedAgent": { "type": "boolean" },
+        "favorites": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of favorite project IDs"
+        },
+        "updatedAt": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Stores document per UID for super admins"
+    },
+    "/developers/{developerId}": {
+      "schema": { "$ref": "#/entities/Developer" },
+      "description": "Developers"
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Projects"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    }
+  }
+}
