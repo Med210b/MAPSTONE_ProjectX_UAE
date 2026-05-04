@@ -24,14 +24,13 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
   
   const itemCount = Math.max(displayImages.length, 1);
   const angleStep = 360 / itemCount;
-
   const currentIndex = ((rotationIndex % itemCount) + itemCount) % itemCount;
 
   const x = useMotionValue(0);
   const springX = useSpring(x, { stiffness: 100, damping: 30 });
   const rotationY = useTransform(springX, (val) => `${val}deg`);
 
-  const [radius, setRadius] = useState(250);
+  const [radius, setRadius] = useState(400);
   const [containerHeight, setContainerHeight] = useState(500);
   
   useEffect(() => {
@@ -56,15 +55,18 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       const width = window.innerWidth;
       const height = window.innerHeight;
       
-      // FIX: Increased radius and height for mobile to support larger images
+      // FIX: Dynamically calculate a large enough radius so images never overlap
       if (width < 640) {
-        setRadius(170); 
-        setContainerHeight(460); 
+        const itemWidth = 260; // Mobile card width
+        setRadius(Math.max(350, (itemWidth / 2) / Math.tan(Math.PI / itemCount) + 40)); 
+        setContainerHeight(480); 
       } else if (width < 1024) {
-        setRadius(240);
+        const itemWidth = 320; // Tablet card width
+        setRadius(Math.max(450, (itemWidth / 2) / Math.tan(Math.PI / itemCount) + 50));
         setContainerHeight(Math.min(height * 0.6, 500));
       } else {
-        setRadius(Math.min(width * 0.3, 450));
+        const itemWidth = 400; // Desktop card width
+        setRadius(Math.max(500, (itemWidth / 2) / Math.tan(Math.PI / itemCount) + 60));
         setContainerHeight(Math.min(height * 0.8, 650));
       }
     };
@@ -72,7 +74,7 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
+  }, [itemCount]);
 
   const rotateTo = (newRotationIndex: number) => {
     setRotationIndex(newRotationIndex);
@@ -94,7 +96,7 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       ref={containerRef}
       className={`relative w-full flex items-center justify-center overflow-hidden bg-gradient-to-b from-transparent via-black/10 to-black/30 rounded-3xl ${className}`} 
       style={{ 
-        perspective: "1500px",
+        perspective: "1200px",
         height: `${containerHeight}px`
       }}
     >
@@ -106,19 +108,20 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       <motion.div 
         style={{ 
           rotateY: rotationY,
+          z: -radius, // THE MAGIC FIX: Pulls the 3D cylinder back so the front image sits perfectly flat on your screen!
           transformStyle: "preserve-3d" 
         }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
+        dragElastic={0.1}
         onDragEnd={(_, info) => {
-          const threshold = 50;
+          const threshold = 30; // Lowered threshold for much easier phone swiping
           if (info.offset.x > threshold) handlePrev();
           else if (info.offset.x < -threshold) handleNext();
           else rotateTo(rotationIndex); 
         }}
-        // FIX: Changed mobile sizes from w-32/h-240px to w-56/h-360px for a massive full-size look
-        className="relative w-56 h-[360px] sm:w-64 sm:h-[400px] md:w-80 md:h-[480px] cursor-grab active:cursor-grabbing"
+        // Perfected CSS sizing for mobile frames
+        className="relative w-[260px] h-[380px] sm:w-[320px] sm:h-[450px] md:w-[400px] md:h-[500px] cursor-grab active:cursor-grabbing"
       >
         {displayImages.map((img, i) => {
           const isFront = i === currentIndex;
@@ -126,7 +129,7 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
           return (
             <motion.div 
               key={`${img}-${i}`} 
-              className="absolute inset-0 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-brand-gold/10 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.8)] bg-[#0A1A2F] group"
+              className="absolute inset-0 rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border border-brand-gold/20 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.8)] bg-[#0A1A2F] group"
               style={{ 
                 transform: `rotateY(${i * angleStep}deg) translateZ(${radius}px)`,
                 backfaceVisibility: 'hidden',
@@ -136,7 +139,7 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
               <div 
-                className="w-full h-full relative cursor-pointer"
+                className="w-full h-full relative cursor-pointer bg-[#0A1A2F]"
                 onClick={() => isFront && onImageClick?.(img)}
               >
                 <img 
@@ -144,7 +147,8 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
                   alt={`Project ${i + 1}`} 
                   referrerPolicy="no-referrer"
                   onError={() => handleImageError(img)}
-                  className={`w-full h-full object-cover transition-all duration-700 ${isFront ? 'opacity-100 scale-100' : 'opacity-40 scale-95 grayscale-[30%]'}`} 
+                  // Aggressive fade and blur for back items to keep mobile clean
+                  className={`w-full h-full object-cover transition-all duration-700 ${isFront ? 'opacity-100 scale-100 blur-0' : 'opacity-10 scale-95 blur-[2px] grayscale-[60%]'}`} 
                 />
                 
                 <div className="absolute inset-0 bg-gradient-to-tr from-brand-gold/10 via-transparent to-transparent opacity-40 pointer-events-none" />
@@ -187,17 +191,17 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={handlePrev} 
-          className="p-3 sm:p-4 bg-[#152A47]/40 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/20 hover:border-brand-gold transition-all shadow-xl"
+          className="p-3 sm:p-4 bg-[#152A47]/60 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/20 hover:border-brand-gold transition-all shadow-xl"
         >
           <ChevronLeft size={20} className="sm:w-[28px] sm:h-[28px]" />
         </motion.button>
         
-        <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 bg-[#152A47]/40 backdrop-blur-md rounded-full border border-brand-gold/10">
+        <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 bg-[#152A47]/60 backdrop-blur-md rounded-full border border-brand-gold/10">
           {displayImages.map((_, i) => (
             <button
               key={i}
               onClick={() => handleDotClick(i)}
-              className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-brand-gold w-3 sm:w-4 shadow-[0_0_8px_rgba(200,169,106,0.5)]' : 'bg-brand-gold/20'}`}
+              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-brand-gold w-4 sm:w-6 shadow-[0_0_8px_rgba(200,169,106,0.5)]' : 'bg-brand-gold/30'}`}
             />
           ))}
         </div>
@@ -206,14 +210,14 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={handleNext} 
-          className="p-3 sm:p-4 bg-[#152A47]/40 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/20 hover:border-brand-gold transition-all shadow-xl"
+          className="p-3 sm:p-4 bg-[#152A47]/60 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/20 hover:border-brand-gold transition-all shadow-xl"
         >
           <ChevronRight size={20} className="sm:w-[28px] sm:h-[28px]" />
         </motion.button>
       </div>
 
-      <div className="absolute inset-y-0 left-0 w-12 sm:w-32 bg-gradient-to-r from-black/60 to-transparent pointer-events-none z-10" />
-      <div className="absolute inset-y-0 right-0 w-12 sm:w-32 bg-gradient-to-l from-black/60 to-transparent pointer-events-none z-10" />
+      <div className="absolute inset-y-0 left-0 w-8 sm:w-32 bg-gradient-to-r from-[#0A1A2F] to-transparent pointer-events-none z-10" />
+      <div className="absolute inset-y-0 right-0 w-8 sm:w-32 bg-gradient-to-l from-[#0A1A2F] to-transparent pointer-events-none z-10" />
     </div>
   );
 }
