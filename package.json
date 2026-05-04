@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://YOUR_GITHUB_USERNAME.github.io/YOUR_REPO_NAME/",
+  "homepage": "https://YOUR_ACTUAL_GITHUB_USERNAME.github.io/MAPSTONEprojectX/",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "predeploy": "npm run build",
