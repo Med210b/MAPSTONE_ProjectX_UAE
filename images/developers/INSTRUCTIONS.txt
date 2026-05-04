@@ -1,0 +1,8 @@
+Here instructions on how to use this folder:
+
+1. Right now, the app uses logos from the web automatically (if available) based on the developer's name in `src/data/developers.ts`.
+2. If a logo is missing or you want to use your own high-quality logo, put the picture file here (e.g., `emaar-logo.png`).
+3. Then go to `src/data/developers.ts` and change the `logoUrl` for that developer to:
+   logoUrl: '/images/developers/emaar-logo.png'
+
+That's it! The app will now show your local logo file.

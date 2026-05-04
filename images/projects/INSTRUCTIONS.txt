@@ -1,0 +1,8 @@
+Here instructions on how to use this folder:
+
+1. Upload your project picture files (like .jpg, .png) into this exact folder (`public/images/projects/`).
+2. Inside your `src/data/projects.ts` file, you can link the picture to your project by using this path format:
+   
+   imageUrl: '/images/projects/your-file-name.jpg'
+
+That's it! The app will automatically read the picture from here.
