@@ -55,17 +55,17 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       const width = window.innerWidth;
       const height = window.innerHeight;
       
-      // FIX: Dynamically calculate a large enough radius so images never overlap
       if (width < 640) {
-        const itemWidth = 260; // Mobile card width
+        const itemWidth = 260; 
         setRadius(Math.max(350, (itemWidth / 2) / Math.tan(Math.PI / itemCount) + 40)); 
-        setContainerHeight(480); 
+        // FIX: Increased mobile height to 540px to give buttons breathing room
+        setContainerHeight(540); 
       } else if (width < 1024) {
-        const itemWidth = 320; // Tablet card width
+        const itemWidth = 320; 
         setRadius(Math.max(450, (itemWidth / 2) / Math.tan(Math.PI / itemCount) + 50));
-        setContainerHeight(Math.min(height * 0.6, 500));
+        setContainerHeight(Math.min(height * 0.6, 540));
       } else {
-        const itemWidth = 400; // Desktop card width
+        const itemWidth = 400; 
         setRadius(Math.max(500, (itemWidth / 2) / Math.tan(Math.PI / itemCount) + 60));
         setContainerHeight(Math.min(height * 0.8, 650));
       }
@@ -108,19 +108,18 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       <motion.div 
         style={{ 
           rotateY: rotationY,
-          z: -radius, // THE MAGIC FIX: Pulls the 3D cylinder back so the front image sits perfectly flat on your screen!
+          z: -radius, 
           transformStyle: "preserve-3d" 
         }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.1}
         onDragEnd={(_, info) => {
-          const threshold = 30; // Lowered threshold for much easier phone swiping
+          const threshold = 30; 
           if (info.offset.x > threshold) handlePrev();
           else if (info.offset.x < -threshold) handleNext();
           else rotateTo(rotationIndex); 
         }}
-        // Perfected CSS sizing for mobile frames
         className="relative w-[260px] h-[380px] sm:w-[320px] sm:h-[450px] md:w-[400px] md:h-[500px] cursor-grab active:cursor-grabbing"
       >
         {displayImages.map((img, i) => {
@@ -147,7 +146,6 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
                   alt={`Project ${i + 1}`} 
                   referrerPolicy="no-referrer"
                   onError={() => handleImageError(img)}
-                  // Aggressive fade and blur for back items to keep mobile clean
                   className={`w-full h-full object-cover transition-all duration-700 ${isFront ? 'opacity-100 scale-100 blur-0' : 'opacity-10 scale-95 blur-[2px] grayscale-[60%]'}`} 
                 />
                 
@@ -186,17 +184,21 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
         })}
       </motion.div>
 
-      <div className="absolute bottom-6 flex gap-4 z-50">
+      {/* FIX: Moved buttons slightly higher (bottom-4) and added translateZ(150px) to force them in front of 3D images */}
+      <div 
+        className="absolute bottom-4 sm:bottom-6 flex gap-4 z-[100]"
+        style={{ transform: "translateZ(150px)" }}
+      >
         <motion.button 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={handlePrev} 
-          className="p-3 sm:p-4 bg-[#152A47]/60 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/20 hover:border-brand-gold transition-all shadow-xl"
+          className="p-3 sm:p-4 bg-[#152A47]/80 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/30 hover:border-brand-gold transition-all shadow-2xl"
         >
           <ChevronLeft size={20} className="sm:w-[28px] sm:h-[28px]" />
         </motion.button>
         
-        <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 bg-[#152A47]/60 backdrop-blur-md rounded-full border border-brand-gold/10">
+        <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 bg-[#152A47]/80 backdrop-blur-xl rounded-full border border-brand-gold/20 shadow-2xl">
           {displayImages.map((_, i) => (
             <button
               key={i}
@@ -210,7 +212,7 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={handleNext} 
-          className="p-3 sm:p-4 bg-[#152A47]/60 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/20 hover:border-brand-gold transition-all shadow-xl"
+          className="p-3 sm:p-4 bg-[#152A47]/80 backdrop-blur-xl rounded-full text-brand-gold border border-brand-gold/30 hover:border-brand-gold transition-all shadow-2xl"
         >
           <ChevronRight size={20} className="sm:w-[28px] sm:h-[28px]" />
         </motion.button>
