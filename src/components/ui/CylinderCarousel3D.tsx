@@ -10,7 +10,8 @@ interface CylinderCarousel3DProps {
 }
 
 export function CylinderCarousel3D({ images, className = "", onImageClick, onActiveIndexChange }: CylinderCarousel3DProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // FIX 1: Track absolute rotation to allow infinite scrolling without rewinding
+  const [rotationIndex, setRotationIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [validImages, setValidImages] = useState<string[]>(images);
   
@@ -26,10 +27,15 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
   const itemCount = Math.max(displayImages.length, 1);
   const angleStep = 360 / itemCount;
 
+  // Derive the visual current index safely for UI elements (handles negative numbers)
+  const currentIndex = ((rotationIndex % itemCount) + itemCount) % itemCount;
+
   // Motion values for interaction
   const x = useMotionValue(0);
   const springX = useSpring(x, { stiffness: 100, damping: 30 });
-  const rotationY = useTransform(springX, (val) => val);
+  
+  // FIX 2: Explicitly add 'deg' to ensure browser compatibility with 3D transforms
+  const rotationY = useTransform(springX, (val) => `${val}deg`);
 
   // Responsive Radius & Heights
   const [radius, setRadius] = useState(250);
@@ -45,16 +51,12 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       (img.startsWith('http') || img.startsWith('/'))
     );
     setValidImages(initialFiltered.length > 0 ? initialFiltered : images.slice(0, 1));
-    setCurrentIndex(0);
+    setRotationIndex(0);
     if (x) x.set(0);
   }, [images]);
 
   const handleImageError = (imgUrl: string) => {
-    setValidImages(prev => {
-      const remaining = prev.filter(url => url !== imgUrl);
-      // Ensure we don't end up with an empty array if possible, but if everything fails, so be it
-      return remaining;
-    });
+    setValidImages(prev => prev.filter(url => url !== imgUrl));
   };
 
   useEffect(() => {
@@ -63,8 +65,8 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
       const height = window.innerHeight;
       
       if (width < 640) {
-        setRadius(140); // Increased radius to spread items out on mobile
-        setContainerHeight(380); // Increased container height for mobile
+        setRadius(140);
+        setContainerHeight(380); 
       } else if (width < 1024) {
         setRadius(240);
         setContainerHeight(Math.min(height * 0.6, 500));
@@ -79,20 +81,22 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  const rotateTo = (index: number) => {
-    setCurrentIndex(index);
-    onActiveIndexChange?.(index);
-    x.set(-index * angleStep);
+  // Use absolute rotation index
+  const rotateTo = (newRotationIndex: number) => {
+    setRotationIndex(newRotationIndex);
+    const safeIndex = ((newRotationIndex % itemCount) + itemCount) % itemCount;
+    onActiveIndexChange?.(safeIndex);
+    x.set(-newRotationIndex * angleStep);
   };
 
-  const handleNext = () => {
-    const nextIdx = (currentIndex + 1) % itemCount;
-    rotateTo(nextIdx);
-  };
+  // Continuous infinite scrolling functions
+  const handleNext = () => rotateTo(rotationIndex + 1);
+  const handlePrev = () => rotateTo(rotationIndex - 1);
 
-  const handlePrev = () => {
-    const prevIdx = (currentIndex - 1 + itemCount) % itemCount;
-    rotateTo(prevIdx);
+  // Shortest path dot navigation calculation
+  const handleDotClick = (targetIndex: number) => {
+    const diff = targetIndex - currentIndex;
+    rotateTo(rotationIndex + diff);
   };
 
   return (
@@ -123,7 +127,7 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
           const threshold = 50;
           if (info.offset.x > threshold) handlePrev();
           else if (info.offset.x < -threshold) handleNext();
-          else rotateTo(currentIndex); // Snap back
+          else rotateTo(rotationIndex); // Snap back to current rotation
         }}
         className="relative w-32 h-[240px] sm:w-56 sm:h-72 md:w-80 md:h-[480px] cursor-grab active:cursor-grabbing"
       >
@@ -208,7 +212,7 @@ export function CylinderCarousel3D({ images, className = "", onImageClick, onAct
           {displayImages.map((_, i) => (
             <button
               key={i}
-              onClick={() => rotateTo(i)}
+              onClick={() => handleDotClick(i)}
               className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-brand-gold w-3 sm:w-4 shadow-[0_0_8px_rgba(200,169,106,0.5)]' : 'bg-brand-gold/20'}`}
             />
           ))}
