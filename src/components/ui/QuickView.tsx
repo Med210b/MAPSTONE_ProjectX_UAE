@@ -125,14 +125,21 @@ export const QuickView: React.FC<QuickViewProps> = ({ project, onClose, onViewFu
                 <span className="text-[9px] md:text-sm font-medium uppercase tracking-widest">{project.area}, {project.emirate}</span>
               </div>
 
-              {/* Grid Section - Optimized Gaps and Padding for Text Fit */}
+              {/* Grid Section */}
               <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-10">
                 <div className="p-3 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5 flex flex-col justify-center min-w-0">
                   <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-1 md:mb-2 font-black">Price Range</p>
                   <div className="flex items-center">
-                    <p className="text-xs sm:text-sm md:text-base lg:text-lg luxury-heading leading-tight text-brand-gold break-words whitespace-normal">
-                      {project.priceAED ? formatPrice(project.priceAED) : project.startingPrice}
-                    </p>
+                    {/* Fixed Spacing Logic: Splits the string by any whitespace (including problematic non-breaking spaces) and enforces a tight flex gap */}
+                    <div className="flex flex-wrap items-baseline gap-x-1 md:gap-x-1.5 text-xs sm:text-sm md:text-base lg:text-lg luxury-heading leading-tight text-brand-gold">
+                      {((project.priceAED ? formatPrice(project.priceAED) : project.startingPrice) || '')
+                        .toString()
+                        .trim()
+                        .split(/[\s\u00A0]+/)
+                        .map((part, i) => (
+                          <span key={i}>{part}</span>
+                        ))}
+                    </div>
                   </div>
                 </div>
                 
