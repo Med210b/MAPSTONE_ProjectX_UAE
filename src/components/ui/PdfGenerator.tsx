@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Project } from '../../data/projects';
 import { AppUser } from '../../contexts/AuthContext';
-import { BadgeCheck, MapPin, Bed, FileDown, ShieldCheck } from 'lucide-react';
+import { BadgeCheck, MapPin, ShieldCheck, FileDown } from 'lucide-react';
 import { LOGO_URL } from '../../App';
 import { getProjectImageUrl } from '../../lib/projectUtils';
 
@@ -41,20 +41,26 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
         scale: 2,
         windowWidth: 1000,
         onclone: (clonedDoc) => {
+          // 1. Defuse <style> tags to prevent the html2canvas parser from crashing on oklab/oklch
+          const styles = clonedDoc.getElementsByTagName('style');
+          for (let i = 0; i < styles.length; i++) {
+            try {
+              if (styles[i].innerHTML) {
+                styles[i].innerHTML = styles[i].innerHTML
+                  .replace(/oklab\([^)]+\)/g, 'transparent')
+                  .replace(/oklch\([^)]+\)/g, 'transparent')
+                  .replace(/color\([^)]+\)/g, 'transparent');
+              }
+            } catch(e) {
+               console.warn("Failed to sanitize style tag", e);
+            }
+          }
+
+          // 2. Ensure base wrapper colors are locked in
           const pdfContent = clonedDoc.getElementById('pdf-content-wrapper');
           if (pdfContent) {
-            pdfContent.style.backgroundColor = '#000000';
+            pdfContent.style.backgroundColor = '#0b101b';
             pdfContent.style.color = '#ffffff';
-            
-            const allElements = pdfContent.getElementsByTagName('*');
-            for (let i = 0; i < allElements.length; i++) {
-              const el = allElements[i] as HTMLElement;
-              const style = window.getComputedStyle(el);
-              
-              if (style.color.includes('okl') || style.color.includes('oklab')) el.style.color = '#ffffff';
-              if (style.backgroundColor.includes('okl') || style.backgroundColor.includes('oklab')) el.style.backgroundColor = 'transparent';
-              if (style.borderColor.includes('okl') || style.borderColor.includes('oklab')) el.style.borderColor = 'rgba(255,255,255,0.1)';
-            }
           }
         }
       });
@@ -113,7 +119,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-      {/* UI visible to the user */}
+      {/* UI visible to the user (Safe to use normal Tailwind here) */}
       <div className="bg-[#0b101b] border border-white/10 p-8 rounded-[2.5rem] w-[95%] max-w-md text-center shadow-2xl">
         <div className="w-16 h-16 bg-brand-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-brand-gold/20 relative">
            <FileDown className="text-brand-gold animate-bounce" size={32} />
@@ -145,7 +151,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98, y: 0 }}
               onClick={generatePDF} 
-              className="w-full py-4 bg-brand-gold text-brand-black rounded-2xl font-black uppercase tracking-widest transition-all shadow-[0_6px_0_0_rgb(157,120,49)] hover:shadow-[0_2px_0_0_rgb(157,120,49)]"
+              className="w-full py-4 bg-brand-gold text-[#000000] rounded-2xl font-black uppercase tracking-widest transition-all shadow-[0_6px_0_0_rgb(157,120,49)] hover:shadow-[0_2px_0_0_rgb(157,120,49)]"
              >
                 Try Again
              </motion.button>
@@ -155,7 +161,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98, y: 0 }}
                 onClick={generatePDF} 
-                className="w-full py-4 bg-brand-gold text-brand-black rounded-2xl font-black uppercase tracking-widest transition-all shadow-[0_6px_0_0_rgb(157,120,49)] hover:shadow-[0_2px_0_0_rgb(157,120,49)]"
+                className="w-full py-4 bg-brand-gold text-[#000000] rounded-2xl font-black uppercase tracking-widest transition-all shadow-[0_6px_0_0_rgb(157,120,49)] hover:shadow-[0_2px_0_0_rgb(157,120,49)]"
               >
                 Download Now
               </motion.button>
@@ -167,9 +173,9 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
         </div>
       </div>
 
-      {/* Hidden PDF container - Fixed 1000x1414 scale guarantees universal compatibility */}
+      {/* Hidden PDF container - Using STRICT inline colors (hex/rgba) to prevent OKLAB crashes */}
       <div 
-        className="fixed top-0 left-[-5000px] -z-50 pointer-events-none overflow-hidden bg-[#0b101b] text-white" 
+        className="fixed top-0 left-[-5000px] -z-50 pointer-events-none overflow-hidden" 
         style={{ 
           width: '1000px', 
           height: '1414px', 
@@ -178,17 +184,19 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
           fontFamily: isArabic ? '"Noto Sans Arabic", "Segoe UI Arabic", Tahoma, sans-serif' : '"Inter", sans-serif',
           letterSpacing: isArabic ? 'normal' : 'inherit',
           transform: 'scale(1)', 
-          transformOrigin: 'top left'
+          transformOrigin: 'top left',
+          backgroundColor: '#0b101b',
+          color: '#ffffff'
         }}
       >
-         <div ref={pdfRef} id="pdf-content-wrapper" className="w-[1000px] h-[1414px] bg-[#0b101b] text-white flex flex-col" style={{ width: '1000px', height: '1414px', backgroundColor: '#0b101b', color: '#ffffff' }}>
+         <div ref={pdfRef} id="pdf-content-wrapper" className="flex flex-col" style={{ width: '1000px', height: '1414px', backgroundColor: '#0b101b', color: '#ffffff' }}>
             
             {/* Header / Branding */}
-            <div className={`px-[48px] py-[36px] border-b border-white/5 flex ${isArabic ? 'flex-row-reverse' : 'flex-row'} justify-between items-center bg-[#0b101b]`} style={{ backgroundColor: '#0b101b', borderColor: 'rgba(255,255,255,0.05)' }}>
+            <div className={`px-[48px] py-[36px] flex ${isArabic ? 'flex-row-reverse' : 'flex-row'} justify-between items-center`} style={{ backgroundColor: '#0b101b', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                <img src={LOGO_URL} alt="Logo" style={{ height: '70px', width: 'auto', maxWidth: '250px', objectFit: 'contain' }} crossOrigin="anonymous" />
                <div className={isArabic ? 'text-left' : 'text-right'}>
-                 <h1 className="text-[28px] font-black text-brand-gold uppercase tracking-tighter mb-[4px] leading-none">Estate Global</h1>
-                 <p className="text-white/40 text-[11px] font-bold tracking-[0.2em] uppercase m-0 leading-none">Premium Real Estate Portfolio</p>
+                 <h1 className="text-[28px] font-black uppercase tracking-tighter mb-[4px] leading-none" style={{ color: '#C5A059' }}>Estate Global</h1>
+                 <p className="text-[11px] font-bold tracking-[0.2em] uppercase m-0 leading-none" style={{ color: 'rgba(255,255,255,0.4)' }}>Premium Real Estate Portfolio</p>
                </div>
             </div>
 
@@ -200,14 +208,14 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                     : getProjectImageUrl(project.name);
                     
                   return (
-                  <div key={i} className="rounded-[32px] h-full flex flex-col overflow-hidden bg-[#121a2d] border border-white/5 shadow-2xl" style={{ backgroundColor: '#121a2d', borderColor: 'rgba(255,255,255,0.05)' }}>
+                  <div key={i} className="rounded-[32px] h-full flex flex-col overflow-hidden" style={{ backgroundColor: '#121a2d', border: '1px solid rgba(255,255,255,0.05)' }}>
                      {/* Hero Image */}
                      <div className="relative h-[440px] shrink-0">
                         <img src={mainImage} alt={project.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#121a2d] via-black/40 to-transparent"></div>
+                        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #121a2d, rgba(0,0,0,0.4), transparent)' }}></div>
                         <div className={`absolute bottom-[36px] ${isArabic ? 'right-[44px] text-right' : 'left-[44px]'}`}>
-                           <h2 className="text-[52px] font-black text-white mb-[10px] leading-none drop-shadow-lg">{project.name}</h2>
-                           <div className={`flex items-center ${isArabic ? 'flex-row-reverse' : ''} text-brand-gold font-bold uppercase tracking-widest text-[16px] drop-shadow-md`}>
+                           <h2 className="text-[52px] font-black mb-[10px] leading-none" style={{ color: '#ffffff' }}>{project.name}</h2>
+                           <div className={`flex items-center ${isArabic ? 'flex-row-reverse' : ''} font-bold uppercase tracking-widest text-[16px]`} style={{ color: '#C5A059' }}>
                               <MapPin size={20} className={isArabic ? 'ml-[8px]' : 'mr-[8px]'} />
                               {project.area}, {project.emirate}
                            </div>
@@ -217,36 +225,35 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                      <div className="p-[44px] flex-1 flex flex-col justify-between">
                         <div>
                            {/* Quick Stats Grid */}
-                           <div className={`grid grid-cols-3 gap-[24px] mb-[40px] pb-[40px] border-b border-white/5 ${isArabic ? 'text-right' : ''}`} style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                           <div className={`grid grid-cols-3 gap-[24px] mb-[40px] pb-[40px] ${isArabic ? 'text-right' : ''}`} style={{ direction: isArabic ? 'rtl' : 'ltr', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                               <div>
-                                 <p className="text-[12px] uppercase tracking-[0.2em] text-white/40 mb-[10px] font-black">Developer</p>
-                                 <p className="text-[22px] font-bold text-white leading-tight truncate">{project.developer}</p>
+                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[10px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Developer</p>
+                                 <p className="text-[22px] font-bold leading-tight truncate" style={{ color: '#ffffff' }}>{project.developer}</p>
                               </div>
                               <div>
-                                 <p className="text-[12px] uppercase tracking-[0.2em] text-white/40 mb-[10px] font-black">Starting Price</p>
-                                 <p className="text-[22px] font-bold text-brand-gold leading-tight">{project.priceAED ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 }).format(project.priceAED) : project.startingPrice}</p>
+                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[10px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Starting Price</p>
+                                 <p className="text-[22px] font-bold leading-tight" style={{ color: '#C5A059' }}>{project.priceAED ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 }).format(project.priceAED) : project.startingPrice}</p>
                               </div>
                               <div>
-                                 <p className="text-[12px] uppercase tracking-[0.2em] text-white/40 mb-[10px] font-black">Handover</p>
-                                 <p className="text-[22px] font-bold text-white uppercase leading-tight">{project.handover}</p>
+                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[10px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Handover</p>
+                                 <p className="text-[22px] font-bold uppercase leading-tight" style={{ color: '#ffffff' }}>{project.handover}</p>
                               </div>
                            </div>
 
                           {/* Content Split */}
                           <div className={`grid grid-cols-2 gap-[56px]`}>
                              <div className={isArabic ? 'order-2 text-right' : 'text-left'}>
-                                <h3 className="text-brand-gold font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]">Project Masterplan</h3>
-                                {/* Removed text-justify for better html2canvas rendering */}
-                                <p className={`text-white/70 text-[14px] leading-[1.7] ${isArabic ? 'text-right' : 'text-left'}`}>
+                                <h3 className="font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]" style={{ color: '#C5A059' }}>Project Masterplan</h3>
+                                <p className={`text-[14px] leading-[1.7] ${isArabic ? 'text-right' : 'text-left'}`} style={{ color: 'rgba(255,255,255,0.7)' }}>
                                   {project.description}
                                 </p>
                              </div>
                              <div className={isArabic ? 'order-1 text-right' : 'text-left'}>
-                                <h3 className="text-brand-gold font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]">World-Class Amenities</h3>
+                                <h3 className="font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]" style={{ color: '#C5A059' }}>World-Class Amenities</h3>
                                 <div className="grid grid-cols-2 gap-x-[20px] gap-y-[18px]">
                                   {project.amenities?.slice(0, 8).map(a => (
-                                    <div key={a} className={`flex items-center gap-[12px] ${isArabic ? 'flex-row-reverse text-right' : ''} text-white/80 text-[13px] font-medium leading-snug`}>
-                                      <ShieldCheck size={16} className="text-brand-gold shrink-0" />
+                                    <div key={a} className={`flex items-center gap-[12px] ${isArabic ? 'flex-row-reverse text-right' : ''} text-[13px] font-medium leading-snug`} style={{ color: 'rgba(255,255,255,0.8)' }}>
+                                      <ShieldCheck size={16} className="shrink-0" style={{ color: '#C5A059' }} />
                                       <span>{a}</span>
                                     </div>
                                   ))}
@@ -260,23 +267,23 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                })}
             </div>
 
-            {/* Premium Agent Bio - Layout & Typographic Adjustments */}
+            {/* Premium Agent Bio */}
             {appUser && (
-              <div className="mx-[48px] mb-[32px] p-[36px] rounded-[32px] bg-[#121a2d] border border-brand-gold/20 relative overflow-hidden shrink-0" style={{ backgroundColor: '#121a2d', borderColor: 'rgba(197,160,89,0.2)' }}>
-                 <div className="absolute -top-[60px] -right-[60px] w-[200px] h-[200px] bg-brand-gold/5 rounded-full blur-[60px]"></div>
+              <div className="mx-[48px] mb-[32px] p-[36px] rounded-[32px] relative overflow-hidden shrink-0" style={{ backgroundColor: '#121a2d', border: '1px solid rgba(197,160,89,0.2)' }}>
+                 <div className="absolute -top-[60px] -right-[60px] w-[200px] h-[200px] rounded-full blur-[60px]" style={{ backgroundColor: 'rgba(197,160,89,0.05)' }}></div>
                  
                  <div className={`flex items-center ${isArabic ? 'flex-row-reverse text-right' : ''} gap-[36px] relative z-10`}>
                     
                     {/* Profile Image */}
                     <div className="relative shrink-0">
                        {appUser.photoURL ? (
-                          <img src={appUser.photoURL || undefined} alt={appUser.displayName} className="w-[100px] h-[100px] rounded-[20px] border-2 border-brand-gold object-cover shadow-xl" crossOrigin="anonymous" />
+                          <img src={appUser.photoURL || undefined} alt={appUser.displayName} className="w-[100px] h-[100px] rounded-[20px] object-cover" crossOrigin="anonymous" style={{ border: '2px solid #C5A059' }} />
                        ) : (
-                          <div className="w-[100px] h-[100px] rounded-[20px] border-2 border-brand-gold bg-black flex items-center justify-center text-[36px] font-black text-brand-gold">
+                          <div className="w-[100px] h-[100px] rounded-[20px] flex items-center justify-center text-[36px] font-black" style={{ border: '2px solid #C5A059', backgroundColor: '#000000', color: '#C5A059' }}>
                             {appUser.displayName.charAt(0)}
                           </div>
                        )}
-                       <div className={`absolute -bottom-[10px] ${isArabic ? '-left-[10px]' : '-right-[10px]'} bg-blue-500 text-white p-[6px] rounded-xl shadow-lg border-[3px] border-[#121a2d]`}>
+                       <div className={`absolute -bottom-[10px] ${isArabic ? '-left-[10px]' : '-right-[10px]'} p-[6px] rounded-xl`} style={{ backgroundColor: '#3b82f6', color: '#ffffff', border: '3px solid #121a2d' }}>
                           <BadgeCheck size={20} strokeWidth={2.5} />
                        </div>
                     </div>
@@ -284,25 +291,23 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                     {/* Agent Details */}
                     <div className="flex-1 min-w-0">
                        <div className={`flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''} mb-[6px]`}>
-                          {/* Font size reduced and truncated to prevent line-breaks */}
-                          <h3 className="text-[24px] font-black text-white leading-none m-0 truncate pr-4">{appUser.displayName}</h3>
-                          <span className="px-[14px] py-[6px] shrink-0 bg-brand-gold/10 text-brand-gold rounded-full text-[9px] font-black uppercase tracking-[0.1em] border border-brand-gold/20">
+                          <h3 className="text-[24px] font-black leading-none m-0 truncate pr-4" style={{ color: '#ffffff' }}>{appUser.displayName}</h3>
+                          <span className="px-[14px] py-[6px] shrink-0 rounded-full text-[9px] font-black uppercase tracking-[0.1em]" style={{ backgroundColor: 'rgba(197,160,89,0.1)', color: '#C5A059', border: '1px solid rgba(197,160,89,0.2)' }}>
                              {isArabic ? 'شريك عقاري معتمد' : 'Verified Estates Partner'}
                           </span>
                        </div>
-                       <p className="text-brand-gold/70 font-bold text-[11px] tracking-[0.2em] uppercase mb-[20px] leading-none">{appUser.companyName}</p>
+                       <p className="font-bold text-[11px] tracking-[0.2em] uppercase mb-[20px] leading-none" style={{ color: 'rgba(197,160,89,0.7)' }}>{appUser.companyName}</p>
                        
-                       <div className={`grid grid-cols-2 gap-x-[24px] gap-y-[14px] pt-[20px] border-t border-white/10 ${isArabic ? 'text-right' : ''}`}>
+                       <div className={`grid grid-cols-2 gap-x-[24px] gap-y-[14px] pt-[20px] ${isArabic ? 'text-right' : ''}`} style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                           <div className={isArabic ? 'order-2' : ''}>
-                             {/* Labels increased for readability */}
-                             <p className="text-[10px] uppercase text-white/40 font-black mb-[6px] tracking-wider">{isArabic ? 'اتصال مباشر' : 'Direct Contact'}</p>
-                             <p className="text-white text-[15px] font-bold leading-none m-0">{appUser.phoneNumber}</p>
+                             <p className="text-[10px] uppercase font-black mb-[6px] tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>{isArabic ? 'اتصال مباشر' : 'Direct Contact'}</p>
+                             <p className="text-[15px] font-bold leading-none m-0" style={{ color: '#ffffff' }}>{appUser.phoneNumber}</p>
                           </div>
                           <div className={isArabic ? 'order-1' : ''}>
-                             <p className="text-[10px] uppercase text-white/40 font-black mb-[6px] tracking-wider">{isArabic ? 'استعلام بالبريد' : 'Email Inquiry'}</p>
-                             <p className="text-white text-[15px] font-bold leading-none m-0 truncate">{appUser.email}</p>
+                             <p className="text-[10px] uppercase font-black mb-[6px] tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>{isArabic ? 'استعلام بالبريد' : 'Email Inquiry'}</p>
+                             <p className="text-[15px] font-bold leading-none m-0 truncate" style={{ color: '#ffffff' }}>{appUser.email}</p>
                           </div>
-                          <div className="col-span-2 flex justify-between items-end text-brand-gold/50 border-t border-white/5 pt-[14px] mt-[4px]">
+                          <div className="col-span-2 flex justify-between items-end pt-[14px] mt-[4px]" style={{ color: 'rgba(197,160,89,0.5)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                              <p className="text-[11px] font-bold uppercase tracking-widest leading-none m-0">{appUser.reraNumber || 'PRP-20837 (APPLIED)'}</p>
                              <p className="text-[10px] italic m-0 font-medium">{isArabic ? 'تحقق من الرمز للحصول على التفاصيل الكاملة' : 'Scan to connect digitally'}</p>
                           </div>
@@ -315,7 +320,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
             
             {/* Footer Tagline */}
             <div className="pb-[32px] text-center shrink-0">
-               <p className="text-white/20 text-[10px] uppercase tracking-[0.6em] font-black m-0">
+               <p className="text-[10px] uppercase tracking-[0.6em] font-black m-0" style={{ color: 'rgba(255,255,255,0.2)' }}>
                   Crafting Modern Journeys Across Dubai's Skyline
                </p>
             </div>
