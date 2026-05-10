@@ -38,7 +38,6 @@ export const QuickView: React.FC<QuickViewProps> = ({ project, onClose, onViewFu
     }
   };
 
-  // FIX: Memoize images here too
   const mainImage = useMemo(() => {
     if (!project) return '';
     return project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/'))
@@ -126,37 +125,39 @@ export const QuickView: React.FC<QuickViewProps> = ({ project, onClose, onViewFu
                 <span className="text-[9px] md:text-sm font-medium uppercase tracking-widest">{project.area}, {project.emirate}</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 md:gap-8 mb-4 md:mb-12">
-                <div className="p-2 sm:p-3 md:p-6 bg-white/5 rounded-[1.5rem] md:rounded-[2rem] border border-white/5 relative group/price overflow-hidden min-w-0 flex flex-col justify-center">
-                  <div className="flex justify-between items-start mb-0.5 md:mb-2">
-                    <p className="text-[7px] md:text-[10px] uppercase tracking-[0.15em] md:tracking-[0.2em] text-[#EDEDED]/30 font-black">Price Range</p>
-                  </div>
-                  <div className="flex items-center min-w-0">
-                    <p className="text-[8px] xs:text-[9.5px] sm:text-xs md:text-xl luxury-heading leading-tight whitespace-nowrap overflow-visible">
+              {/* Grid Section - Optimized Gaps and Padding for Text Fit */}
+              <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-10">
+                <div className="p-3 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5 flex flex-col justify-center min-w-0">
+                  <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-1 md:mb-2 font-black">Price Range</p>
+                  <div className="flex items-center">
+                    <p className="text-xs sm:text-sm md:text-base lg:text-lg luxury-heading leading-tight text-brand-gold break-words whitespace-normal">
                       {project.priceAED ? formatPrice(project.priceAED) : project.startingPrice}
                     </p>
                   </div>
                 </div>
-                <div className="p-2.5 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5">
-                  <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-0.5 md:mb-1 font-black">Beds</p>
-                  <div className="flex items-center gap-1 md:gap-2">
-                    <Building2 size={12} className="md:w-3.5 md:h-3.5 text-brand-gold" />
-                    <p className="text-[10px] md:text-lg font-black text-white">{project.beds}</p>
+                
+                <div className="p-3 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5 flex flex-col justify-center min-w-0">
+                  <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-1 md:mb-2 font-black">Beds</p>
+                  <div className="flex items-start gap-1.5 md:gap-2">
+                    <Building2 size={12} className="md:w-3.5 md:h-3.5 text-brand-gold shrink-0 mt-[2px] md:mt-1" />
+                    <p className="text-[10px] md:text-sm lg:text-base font-black text-white leading-tight break-words">{project.beds}</p>
                   </div>
                 </div>
-                <div className="p-2.5 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5">
-                  <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-0.5 md:mb-1 font-black">Handover</p>
-                  <div className="flex items-center gap-1 md:gap-2">
-                    <Calendar size={12} className="md:w-3.5 md:h-3.5 text-brand-gold" />
-                    <p className="text-[10px] md:text-lg font-black text-white whitespace-nowrap overflow-hidden text-ellipsis">{project.handover}</p>
+                
+                <div className="p-3 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5 flex flex-col justify-center min-w-0">
+                  <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-1 md:mb-2 font-black">Handover</p>
+                  <div className="flex items-start gap-1.5 md:gap-2">
+                    <Calendar size={12} className="md:w-3.5 md:h-3.5 text-brand-gold shrink-0 mt-[2px] md:mt-1" />
+                    <p className="text-[10px] md:text-sm lg:text-base font-black text-white leading-tight break-words">{project.handover}</p>
                   </div>
                 </div>
+
                 {project.totalAreaSqFt && (
-                  <div className="p-2.5 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5">
-                    <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-0.5 md:mb-1 font-black">Area</p>
-                    <div className="flex items-center gap-1 md:gap-2">
-                      <Ruler size={12} className="md:w-3.5 md:h-3.5 text-brand-gold" />
-                      <p className="text-[10px] md:text-lg font-black text-white">{formatArea(project.totalAreaSqFt)}</p>
+                  <div className="p-3 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5 flex flex-col justify-center min-w-0">
+                    <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-1 md:mb-2 font-black">Area</p>
+                    <div className="flex items-start gap-1.5 md:gap-2">
+                      <Ruler size={12} className="md:w-3.5 md:h-3.5 text-brand-gold shrink-0 mt-[2px] md:mt-1" />
+                      <p className="text-[10px] md:text-sm lg:text-base font-black text-white leading-tight break-words">{formatArea(project.totalAreaSqFt)}</p>
                     </div>
                   </div>
                 )}
@@ -167,8 +168,8 @@ export const QuickView: React.FC<QuickViewProps> = ({ project, onClose, onViewFu
                   <div className="w-7 h-7 md:w-10 md:h-10 bg-brand-gold/20 rounded-lg md:rounded-xl flex items-center justify-center text-brand-gold shrink-0">
                     <CreditCard size={14} className="md:w-5 md:h-5 text-brand-gold" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[7px] md:text-[10px] font-black uppercase tracking-widest text-brand-gold/60 leading-none mb-1">Acquisition</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[7px] md:text-[10px] font-black uppercase tracking-widest text-brand-gold/60 leading-none mb-1 md:mb-1.5">Acquisition</p>
                     <p className="text-[10px] md:text-lg font-black text-white leading-none truncate">{project.paymentPlan}</p>
                   </div>
                 </div>
@@ -184,7 +185,7 @@ export const QuickView: React.FC<QuickViewProps> = ({ project, onClose, onViewFu
               </button>
               
               {user && (
-                <div className="relative">
+                <div className="relative shrink-0">
                   <LikeButton 
                     liked={!!isFavorite}
                     onClick={(e) => {
@@ -192,7 +193,7 @@ export const QuickView: React.FC<QuickViewProps> = ({ project, onClose, onViewFu
                       toggleFavorite(project.id);
                     }}
                     size={16}
-                    className="w-10 h-10 md:w-[52px] md:h-[52px]"
+                    className="w-[42px] h-[42px] md:w-[52px] md:h-[52px]"
                   />
                 </div>
               )}
