@@ -31,8 +31,11 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
 
       setError(null);
       setGenerating(true);
-      // Generous pause for image assets to completely load
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Wait for all custom fonts to completely load to prevent measuring errors
+      await document.fonts.ready;
+      // Generous pause for image assets to completely load and layout to settle
+      await new Promise(resolve => setTimeout(resolve, 2500));
 
       const canvas = await html2canvas(target, { 
         useCORS: true,
@@ -41,7 +44,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
         scale: 2,
         windowWidth: 1000,
         onclone: (clonedDoc) => {
-          // 1. Defuse <style> tags to prevent the html2canvas parser from crashing on oklab/oklch
+          // Defuse <style> tags to prevent the html2canvas parser from crashing on oklab/oklch
           const styles = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styles.length; i++) {
             try {
@@ -56,7 +59,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
             }
           }
 
-          // 2. Ensure base wrapper colors are locked in
+          // Ensure base wrapper colors are locked in
           const pdfContent = clonedDoc.getElementById('pdf-content-wrapper');
           if (pdfContent) {
             pdfContent.style.backgroundColor = '#0b101b';
@@ -119,7 +122,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-      {/* UI visible to the user (Safe to use normal Tailwind here) */}
+      {/* UI visible to the user */}
       <div className="bg-[#0b101b] border border-white/10 p-8 rounded-[2.5rem] w-[95%] max-w-md text-center shadow-2xl">
         <div className="w-16 h-16 bg-brand-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-brand-gold/20 relative">
            <FileDown className="text-brand-gold animate-bounce" size={32} />
@@ -173,7 +176,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
         </div>
       </div>
 
-      {/* Hidden PDF container - Using STRICT inline colors (hex/rgba) to prevent OKLAB crashes */}
+      {/* Hidden PDF container - Using STRICT inline colors and safe line-heights */}
       <div 
         className="fixed top-0 left-[-5000px] -z-50 pointer-events-none overflow-hidden" 
         style={{ 
@@ -195,8 +198,8 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
             <div className={`px-[48px] py-[36px] flex ${isArabic ? 'flex-row-reverse' : 'flex-row'} justify-between items-center`} style={{ backgroundColor: '#0b101b', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                <img src={LOGO_URL} alt="Logo" style={{ height: '70px', width: 'auto', maxWidth: '250px', objectFit: 'contain' }} crossOrigin="anonymous" />
                <div className={isArabic ? 'text-left' : 'text-right'}>
-                 <h1 className="text-[28px] font-black uppercase tracking-tighter mb-[4px] leading-none" style={{ color: '#C5A059' }}>Estate Global</h1>
-                 <p className="text-[11px] font-bold tracking-[0.2em] uppercase m-0 leading-none" style={{ color: 'rgba(255,255,255,0.4)' }}>Premium Real Estate Portfolio</p>
+                 <h1 className="text-[28px] font-black uppercase tracking-tighter mb-[4px]" style={{ color: '#C5A059', lineHeight: '1.2' }}>Estate Global</h1>
+                 <p className="text-[11px] font-bold tracking-[0.2em] uppercase m-0" style={{ color: 'rgba(255,255,255,0.4)', lineHeight: '1.2' }}>Premium Real Estate Portfolio</p>
                </div>
             </div>
 
@@ -214,7 +217,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                         <img src={mainImage} alt={project.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
                         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #121a2d, rgba(0,0,0,0.4), transparent)' }}></div>
                         <div className={`absolute bottom-[36px] ${isArabic ? 'right-[44px] text-right' : 'left-[44px]'}`}>
-                           <h2 className="text-[52px] font-black mb-[10px] leading-none" style={{ color: '#ffffff' }}>{project.name}</h2>
+                           <h2 className="text-[52px] font-black mb-[10px]" style={{ color: '#ffffff', lineHeight: '1.1' }}>{project.name}</h2>
                            <div className={`flex items-center ${isArabic ? 'flex-row-reverse' : ''} font-bold uppercase tracking-widest text-[16px]`} style={{ color: '#C5A059' }}>
                               <MapPin size={20} className={isArabic ? 'ml-[8px]' : 'mr-[8px]'} />
                               {project.area}, {project.emirate}
@@ -226,17 +229,18 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                         <div>
                            {/* Quick Stats Grid */}
                            <div className={`grid grid-cols-3 gap-[24px] mb-[40px] pb-[40px] ${isArabic ? 'text-right' : ''}`} style={{ direction: isArabic ? 'rtl' : 'ltr', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                              <div>
-                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[10px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Developer</p>
-                                 <p className="text-[22px] font-bold leading-tight truncate" style={{ color: '#ffffff' }}>{project.developer}</p>
+                              <div className="pr-2">
+                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[12px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Developer</p>
+                                 {/* Removed truncate, increased line-height */}
+                                 <p className="text-[22px] font-bold" style={{ color: '#ffffff', lineHeight: '1.4' }}>{project.developer}</p>
+                              </div>
+                              <div className="pr-2">
+                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[12px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Starting Price</p>
+                                 <p className="text-[22px] font-bold" style={{ color: '#C5A059', lineHeight: '1.4' }}>{project.priceAED ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 }).format(project.priceAED) : project.startingPrice}</p>
                               </div>
                               <div>
-                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[10px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Starting Price</p>
-                                 <p className="text-[22px] font-bold leading-tight" style={{ color: '#C5A059' }}>{project.priceAED ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 }).format(project.priceAED) : project.startingPrice}</p>
-                              </div>
-                              <div>
-                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[10px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Handover</p>
-                                 <p className="text-[22px] font-bold uppercase leading-tight" style={{ color: '#ffffff' }}>{project.handover}</p>
+                                 <p className="text-[12px] uppercase tracking-[0.2em] mb-[12px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Handover</p>
+                                 <p className="text-[22px] font-bold uppercase" style={{ color: '#ffffff', lineHeight: '1.4' }}>{project.handover}</p>
                               </div>
                            </div>
 
@@ -244,15 +248,15 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                           <div className={`grid grid-cols-2 gap-[56px]`}>
                              <div className={isArabic ? 'order-2 text-right' : 'text-left'}>
                                 <h3 className="font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]" style={{ color: '#C5A059' }}>Project Masterplan</h3>
-                                <p className={`text-[14px] leading-[1.7] ${isArabic ? 'text-right' : 'text-left'}`} style={{ color: 'rgba(255,255,255,0.7)' }}>
+                                <p className={`text-[14px] ${isArabic ? 'text-right' : 'text-left'}`} style={{ color: 'rgba(255,255,255,0.7)', lineHeight: '1.8' }}>
                                   {project.description}
                                 </p>
                              </div>
                              <div className={isArabic ? 'order-1 text-right' : 'text-left'}>
                                 <h3 className="font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]" style={{ color: '#C5A059' }}>World-Class Amenities</h3>
-                                <div className="grid grid-cols-2 gap-x-[20px] gap-y-[18px]">
+                                <div className="grid grid-cols-2 gap-x-[20px] gap-y-[20px]">
                                   {project.amenities?.slice(0, 8).map(a => (
-                                    <div key={a} className={`flex items-center gap-[12px] ${isArabic ? 'flex-row-reverse text-right' : ''} text-[13px] font-medium leading-snug`} style={{ color: 'rgba(255,255,255,0.8)' }}>
+                                    <div key={a} className={`flex items-center gap-[12px] ${isArabic ? 'flex-row-reverse text-right' : ''} text-[13px] font-medium`} style={{ color: 'rgba(255,255,255,0.8)', lineHeight: '1.4' }}>
                                       <ShieldCheck size={16} className="shrink-0" style={{ color: '#C5A059' }} />
                                       <span>{a}</span>
                                     </div>
@@ -269,7 +273,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
 
             {/* Premium Agent Bio */}
             {appUser && (
-              <div className="mx-[48px] mb-[32px] p-[36px] rounded-[32px] relative overflow-hidden shrink-0" style={{ backgroundColor: '#121a2d', border: '1px solid rgba(197,160,89,0.2)' }}>
+              <div className="mx-[48px] mb-[32px] p-[40px] rounded-[32px] relative shrink-0" style={{ backgroundColor: '#121a2d', border: '1px solid rgba(197,160,89,0.2)' }}>
                  <div className="absolute -top-[60px] -right-[60px] w-[200px] h-[200px] rounded-full blur-[60px]" style={{ backgroundColor: 'rgba(197,160,89,0.05)' }}></div>
                  
                  <div className={`flex items-center ${isArabic ? 'flex-row-reverse text-right' : ''} gap-[36px] relative z-10`}>
@@ -290,26 +294,28 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                     
                     {/* Agent Details */}
                     <div className="flex-1 min-w-0">
-                       <div className={`flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''} mb-[6px]`}>
-                          <h3 className="text-[24px] font-black leading-none m-0 truncate pr-4" style={{ color: '#ffffff' }}>{appUser.displayName}</h3>
+                       <div className={`flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''} mb-[10px]`}>
+                          {/* Removed truncate and leading-none, added safe line-height */}
+                          <h3 className="text-[24px] font-black m-0 pr-4" style={{ color: '#ffffff', lineHeight: '1.3' }}>{appUser.displayName}</h3>
                           <span className="px-[14px] py-[6px] shrink-0 rounded-full text-[9px] font-black uppercase tracking-[0.1em]" style={{ backgroundColor: 'rgba(197,160,89,0.1)', color: '#C5A059', border: '1px solid rgba(197,160,89,0.2)' }}>
                              {isArabic ? 'شريك عقاري معتمد' : 'Verified Estates Partner'}
                           </span>
                        </div>
-                       <p className="font-bold text-[11px] tracking-[0.2em] uppercase mb-[20px] leading-none" style={{ color: 'rgba(197,160,89,0.7)' }}>{appUser.companyName}</p>
+                       <p className="font-bold text-[11px] tracking-[0.2em] uppercase mb-[24px]" style={{ color: 'rgba(197,160,89,0.7)', lineHeight: '1.4' }}>{appUser.companyName}</p>
                        
-                       <div className={`grid grid-cols-2 gap-x-[24px] gap-y-[14px] pt-[20px] ${isArabic ? 'text-right' : ''}`} style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                       <div className={`grid grid-cols-2 gap-x-[24px] gap-y-[16px] pt-[20px] ${isArabic ? 'text-right' : ''}`} style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                           <div className={isArabic ? 'order-2' : ''}>
-                             <p className="text-[10px] uppercase font-black mb-[6px] tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>{isArabic ? 'اتصال مباشر' : 'Direct Contact'}</p>
-                             <p className="text-[15px] font-bold leading-none m-0" style={{ color: '#ffffff' }}>{appUser.phoneNumber}</p>
+                             <p className="text-[10px] uppercase font-black mb-[8px] tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>{isArabic ? 'اتصال مباشر' : 'Direct Contact'}</p>
+                             <p className="text-[15px] font-bold m-0" style={{ color: '#ffffff', lineHeight: '1.3' }}>{appUser.phoneNumber}</p>
                           </div>
-                          <div className={isArabic ? 'order-1' : ''}>
-                             <p className="text-[10px] uppercase font-black mb-[6px] tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>{isArabic ? 'استعلام بالبريد' : 'Email Inquiry'}</p>
-                             <p className="text-[15px] font-bold leading-none m-0 truncate" style={{ color: '#ffffff' }}>{appUser.email}</p>
+                          <div className={isArabic ? 'order-1 pr-4' : 'pr-4'}>
+                             <p className="text-[10px] uppercase font-black mb-[8px] tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>{isArabic ? 'استعلام بالبريد' : 'Email Inquiry'}</p>
+                             {/* Removed truncate, added wordBreak to wrap cleanly if too long */}
+                             <p className="text-[15px] font-bold m-0" style={{ color: '#ffffff', lineHeight: '1.3', wordBreak: 'break-all' }}>{appUser.email}</p>
                           </div>
-                          <div className="col-span-2 flex justify-between items-end pt-[14px] mt-[4px]" style={{ color: 'rgba(197,160,89,0.5)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                             <p className="text-[11px] font-bold uppercase tracking-widest leading-none m-0">{appUser.reraNumber || 'PRP-20837 (APPLIED)'}</p>
-                             <p className="text-[10px] italic m-0 font-medium">{isArabic ? 'تحقق من الرمز للحصول على التفاصيل الكاملة' : 'Scan to connect digitally'}</p>
+                          <div className="col-span-2 flex justify-between items-end pt-[16px] mt-[4px]" style={{ color: 'rgba(197,160,89,0.5)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                             <p className="text-[11px] font-bold uppercase tracking-widest m-0" style={{ lineHeight: '1.3' }}>{appUser.reraNumber || 'PRP-20837 (APPLIED)'}</p>
+                             <p className="text-[10px] italic m-0 font-medium" style={{ lineHeight: '1.3' }}>{isArabic ? 'تحقق من الرمز للحصول على التفاصيل الكاملة' : 'Scan to connect digitally'}</p>
                           </div>
                        </div>
                     </div>
@@ -320,7 +326,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
             
             {/* Footer Tagline */}
             <div className="pb-[32px] text-center shrink-0">
-               <p className="text-[10px] uppercase tracking-[0.6em] font-black m-0" style={{ color: 'rgba(255,255,255,0.2)' }}>
+               <p className="text-[10px] uppercase tracking-[0.6em] font-black m-0" style={{ color: 'rgba(255,255,255,0.2)', lineHeight: '1.5' }}>
                   Crafting Modern Journeys Across Dubai's Skyline
                </p>
             </div>
