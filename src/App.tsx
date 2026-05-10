@@ -508,8 +508,9 @@ export default function App() {
       default:
         return (
           <div className="flex-1 flex flex-col h-full relative z-10 w-full overflow-hidden">
-            {/* Filters Area */}
-            <div className="px-6 md:px-8 py-4 z-20">
+            
+            {/* Filters Area - FIX: Changed from z-20 to z-30 AND added relative positioning to elevate it over the list/map toggle */}
+            <div className="px-6 md:px-8 py-4 relative z-30">
               <TopBarFilters 
                 selectedEmirate={selectedEmirate}
                 onEmirateSelect={(e) => { setSelectedEmirate(e); setSelectedAreas(['All Areas']); setSelectedProject(null); }}
@@ -523,14 +524,14 @@ export default function App() {
                     <button 
                       onClick={() => setSelectedDeveloperFilter(null)}
                       className="ml-2 hover:bg-brand-gold hover:text-black rounded-full w-4 h-4 flex items-center justify-center font-bold"
-                    >&times;</button>
+                    >×</button>
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Mobile View Toggle */}
-            <div className="md:hidden flex justify-center mb-4 px-6 z-20">
+            {/* Mobile View Toggle - Kept at z-20 so it naturally slides UNDER the z-30 Filters area above */}
+            <div className="md:hidden flex justify-center mb-4 px-6 relative z-20">
               <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-1 flex items-center w-full max-w-sm">
                 <button 
                   onClick={() => setViewMode('list')}
@@ -817,4 +818,3 @@ export default function App() {
     </div>
   );
 }
-
