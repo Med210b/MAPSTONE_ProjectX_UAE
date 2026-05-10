@@ -31,23 +31,21 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
 
       setError(null);
       setGenerating(true);
-      // More generous pause for assets to load fully across networks
+      // Generous pause for image assets to completely load
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const canvas = await html2canvas(target, { 
         useCORS: true,
         backgroundColor: '#0b101b',
-        logging: false, // Turn off logging for production performance
+        logging: false, 
         scale: 2,
         windowWidth: 1000,
         onclone: (clonedDoc) => {
-          // Force standard colors on the cloned document to avoid oklab/oklch errors
           const pdfContent = clonedDoc.getElementById('pdf-content-wrapper');
           if (pdfContent) {
             pdfContent.style.backgroundColor = '#000000';
             pdfContent.style.color = '#ffffff';
             
-            // Recursively search and replace oklch/oklab if they managed to sneak in
             const allElements = pdfContent.getElementsByTagName('*');
             for (let i = 0; i < allElements.length; i++) {
               const el = allElements[i] as HTMLElement;
@@ -97,18 +95,15 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
     } finally {
       setGenerating(false);
       if (success) {
-         // Auto close on success after a short delay
          setTimeout(() => onClose(), 1000); 
       }
     }
   };
 
-  // Support for Arabic / RTL
   const isArabic = document.documentElement.lang === 'ar' || 
                    document.cookie.includes('googtrans=/en/ar') ||
                    document.body.dir === 'rtl';
 
-  // Automatically start generation when component mounts
   useEffect(() => {
     const timer = setTimeout(() => {
       generatePDF();
@@ -172,7 +167,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
         </div>
       </div>
 
-      {/* Hidden PDF container - Strict PX mapping ensures mobile/desktop parity */}
+      {/* Hidden PDF container - Fixed 1000x1414 scale guarantees universal compatibility */}
       <div 
         className="fixed top-0 left-[-5000px] -z-50 pointer-events-none overflow-hidden bg-[#0b101b] text-white" 
         style={{ 
@@ -182,74 +177,77 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
           direction: isArabic ? 'rtl' : 'ltr',
           fontFamily: isArabic ? '"Noto Sans Arabic", "Segoe UI Arabic", Tahoma, sans-serif' : '"Inter", sans-serif',
           letterSpacing: isArabic ? 'normal' : 'inherit',
-          transform: 'scale(1)', // Prevents viewport scaling interference
+          transform: 'scale(1)', 
           transformOrigin: 'top left'
         }}
       >
          <div ref={pdfRef} id="pdf-content-wrapper" className="w-[1000px] h-[1414px] bg-[#0b101b] text-white flex flex-col" style={{ width: '1000px', height: '1414px', backgroundColor: '#0b101b', color: '#ffffff' }}>
             
             {/* Header / Branding */}
-            <div className={`px-[48px] py-[32px] border-b border-white/5 flex ${isArabic ? 'flex-row-reverse' : 'flex-row'} justify-between items-center bg-[#0b101b]`} style={{ backgroundColor: '#0b101b', borderColor: 'rgba(255,255,255,0.05)' }}>
-               {/* Explicit Logo sizing to prevent stretching */}
+            <div className={`px-[48px] py-[36px] border-b border-white/5 flex ${isArabic ? 'flex-row-reverse' : 'flex-row'} justify-between items-center bg-[#0b101b]`} style={{ backgroundColor: '#0b101b', borderColor: 'rgba(255,255,255,0.05)' }}>
                <img src={LOGO_URL} alt="Logo" style={{ height: '70px', width: 'auto', maxWidth: '250px', objectFit: 'contain' }} crossOrigin="anonymous" />
                <div className={isArabic ? 'text-left' : 'text-right'}>
-                 <h1 className="text-[30px] font-black text-brand-gold uppercase tracking-tighter mb-[4px] leading-none">Estate Global</h1>
-                 <p className="text-white/40 text-[10px] font-bold tracking-[0.2em] uppercase m-0 leading-none">Premium Real Estate Portfolio</p>
+                 <h1 className="text-[28px] font-black text-brand-gold uppercase tracking-tighter mb-[4px] leading-none">Estate Global</h1>
+                 <p className="text-white/40 text-[11px] font-bold tracking-[0.2em] uppercase m-0 leading-none">Premium Real Estate Portfolio</p>
                </div>
             </div>
 
             {/* Projects Container */}
-            <div className="flex-1 px-[48px] py-[32px] overflow-hidden">
+            <div className="flex-1 px-[48px] py-[36px] overflow-hidden">
                {projects.slice(0, 1).map((project, i) => {
                   const mainImage = project.imageUrl && project.imageUrl.startsWith('http') 
                     ? project.imageUrl 
                     : getProjectImageUrl(project.name);
                     
                   return (
-                  <div key={i} className="rounded-[40px] h-full flex flex-col overflow-hidden bg-[#121a2d] border border-white/5 shadow-2xl" style={{ backgroundColor: '#121a2d', borderColor: 'rgba(255,255,255,0.05)' }}>
-                     <div className="relative h-[480px] shrink-0">
+                  <div key={i} className="rounded-[32px] h-full flex flex-col overflow-hidden bg-[#121a2d] border border-white/5 shadow-2xl" style={{ backgroundColor: '#121a2d', borderColor: 'rgba(255,255,255,0.05)' }}>
+                     {/* Hero Image */}
+                     <div className="relative h-[440px] shrink-0">
                         <img src={mainImage} alt={project.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                        <div className={`absolute bottom-[32px] ${isArabic ? 'right-[40px] text-right' : 'left-[40px]'}`}>
-                           <h2 className="text-[48px] font-black text-white mb-[8px] leading-normal drop-shadow-2xl">{project.name}</h2>
-                           <div className={`flex items-center ${isArabic ? 'flex-row-reverse' : ''} text-brand-gold font-bold uppercase tracking-widest text-[14px]`}>
-                              <MapPin size={18} className={isArabic ? 'ml-[8px]' : 'mr-[8px]'} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#121a2d] via-black/40 to-transparent"></div>
+                        <div className={`absolute bottom-[36px] ${isArabic ? 'right-[44px] text-right' : 'left-[44px]'}`}>
+                           <h2 className="text-[52px] font-black text-white mb-[10px] leading-none drop-shadow-lg">{project.name}</h2>
+                           <div className={`flex items-center ${isArabic ? 'flex-row-reverse' : ''} text-brand-gold font-bold uppercase tracking-widest text-[16px] drop-shadow-md`}>
+                              <MapPin size={20} className={isArabic ? 'ml-[8px]' : 'mr-[8px]'} />
                               {project.area}, {project.emirate}
                            </div>
                         </div>
                      </div>
                      
-                     <div className="p-[40px] flex-1 flex flex-col justify-between">
+                     <div className="p-[44px] flex-1 flex flex-col justify-between">
                         <div>
-                           <div className={`grid grid-cols-3 gap-[32px] mb-[32px] pb-[32px] border-b border-white/5 ${isArabic ? 'text-right' : ''}`} style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                           {/* Quick Stats Grid */}
+                           <div className={`grid grid-cols-3 gap-[24px] mb-[40px] pb-[40px] border-b border-white/5 ${isArabic ? 'text-right' : ''}`} style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
                               <div>
-                                 <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 mb-[8px] font-black">Developer</p>
-                                 <p className="text-[20px] font-bold text-white leading-normal">{project.developer}</p>
+                                 <p className="text-[12px] uppercase tracking-[0.2em] text-white/40 mb-[10px] font-black">Developer</p>
+                                 <p className="text-[22px] font-bold text-white leading-tight truncate">{project.developer}</p>
                               </div>
                               <div>
-                                 <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 mb-[8px] font-black">Starting Price</p>
-                                 <p className="text-[20px] font-bold text-brand-gold leading-normal">{project.priceAED ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 }).format(project.priceAED) : project.startingPrice}</p>
+                                 <p className="text-[12px] uppercase tracking-[0.2em] text-white/40 mb-[10px] font-black">Starting Price</p>
+                                 <p className="text-[22px] font-bold text-brand-gold leading-tight">{project.priceAED ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 }).format(project.priceAED) : project.startingPrice}</p>
                               </div>
                               <div>
-                                 <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 mb-[8px] font-black">Handover</p>
-                                 <p className="text-[20px] font-bold text-white uppercase leading-normal">{project.handover}</p>
+                                 <p className="text-[12px] uppercase tracking-[0.2em] text-white/40 mb-[10px] font-black">Handover</p>
+                                 <p className="text-[22px] font-bold text-white uppercase leading-tight">{project.handover}</p>
                               </div>
                            </div>
 
-                          <div className={`grid grid-cols-2 gap-[48px]`}>
+                          {/* Content Split */}
+                          <div className={`grid grid-cols-2 gap-[56px]`}>
                              <div className={isArabic ? 'order-2 text-right' : 'text-left'}>
-                                <h3 className="text-brand-gold font-black uppercase tracking-[0.2em] text-[10px] mb-[24px]">Project Masterplan</h3>
-                                <p className={`text-white/60 text-[13px] leading-[1.8] ${isArabic ? 'text-right' : 'text-justify'}`}>
+                                <h3 className="text-brand-gold font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]">Project Masterplan</h3>
+                                {/* Removed text-justify for better html2canvas rendering */}
+                                <p className={`text-white/70 text-[14px] leading-[1.7] ${isArabic ? 'text-right' : 'text-left'}`}>
                                   {project.description}
                                 </p>
                              </div>
                              <div className={isArabic ? 'order-1 text-right' : 'text-left'}>
-                                <h3 className="text-brand-gold font-black uppercase tracking-[0.2em] text-[10px] mb-[24px]">World-Class Amenities</h3>
-                                <div className="grid grid-cols-2 gap-x-[24px] gap-y-[20px]">
+                                <h3 className="text-brand-gold font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]">World-Class Amenities</h3>
+                                <div className="grid grid-cols-2 gap-x-[20px] gap-y-[18px]">
                                   {project.amenities?.slice(0, 8).map(a => (
-                                    <div key={a} className={`flex items-center gap-[12px] ${isArabic ? 'flex-row-reverse text-right' : ''} text-white/70 text-[11px] font-medium leading-normal`}>
-                                      <ShieldCheck size={14} className="text-brand-gold shrink-0" />
-                                      <span className="leading-tight">{a}</span>
+                                    <div key={a} className={`flex items-center gap-[12px] ${isArabic ? 'flex-row-reverse text-right' : ''} text-white/80 text-[13px] font-medium leading-snug`}>
+                                      <ShieldCheck size={16} className="text-brand-gold shrink-0" />
+                                      <span>{a}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -262,56 +260,62 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                })}
             </div>
 
-            {/* Premium Agent Bio */}
+            {/* Premium Agent Bio - Layout & Typographic Adjustments */}
             {appUser && (
-              <div className="mx-[48px] mb-[32px] p-[40px] rounded-[40px] bg-[#121a2d] border border-brand-gold/20 relative overflow-hidden shrink-0" style={{ backgroundColor: '#121a2d', borderColor: 'rgba(197,160,89,0.2)' }}>
-                 <div className="absolute -top-[48px] -right-[48px] w-[192px] h-[192px] bg-brand-gold/5 rounded-full blur-[60px]"></div>
+              <div className="mx-[48px] mb-[32px] p-[36px] rounded-[32px] bg-[#121a2d] border border-brand-gold/20 relative overflow-hidden shrink-0" style={{ backgroundColor: '#121a2d', borderColor: 'rgba(197,160,89,0.2)' }}>
+                 <div className="absolute -top-[60px] -right-[60px] w-[200px] h-[200px] bg-brand-gold/5 rounded-full blur-[60px]"></div>
                  
-                 <div className={`flex items-center ${isArabic ? 'flex-row-reverse text-right' : ''} gap-[32px] relative z-10`}>
-                    <div className="relative">
+                 <div className={`flex items-center ${isArabic ? 'flex-row-reverse text-right' : ''} gap-[36px] relative z-10`}>
+                    
+                    {/* Profile Image */}
+                    <div className="relative shrink-0">
                        {appUser.photoURL ? (
-                          <img src={appUser.photoURL || undefined} alt={appUser.displayName} className="w-[96px] h-[96px] rounded-[16px] border-2 border-brand-gold object-cover shadow-2xl" crossOrigin="anonymous" />
+                          <img src={appUser.photoURL || undefined} alt={appUser.displayName} className="w-[100px] h-[100px] rounded-[20px] border-2 border-brand-gold object-cover shadow-xl" crossOrigin="anonymous" />
                        ) : (
-                          <div className="w-[96px] h-[96px] rounded-[16px] border-2 border-brand-gold bg-black flex items-center justify-center text-[30px] font-black text-brand-gold">
+                          <div className="w-[100px] h-[100px] rounded-[20px] border-2 border-brand-gold bg-black flex items-center justify-center text-[36px] font-black text-brand-gold">
                             {appUser.displayName.charAt(0)}
                           </div>
                        )}
-                       <div className={`absolute -bottom-[8px] ${isArabic ? '-left-[8px]' : '-right-[8px]'} bg-blue-500 text-white p-[6px] rounded-lg shadow-lg border-2 border-black`}>
-                          <BadgeCheck size={16} />
+                       <div className={`absolute -bottom-[10px] ${isArabic ? '-left-[10px]' : '-right-[10px]'} bg-blue-500 text-white p-[6px] rounded-xl shadow-lg border-[3px] border-[#121a2d]`}>
+                          <BadgeCheck size={20} strokeWidth={2.5} />
                        </div>
                     </div>
                     
-                    <div className="flex-1">
-                       <div className={`flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''} mb-[4px]`}>
-                          <h3 className="text-[30px] font-black text-white leading-normal m-0">{appUser.displayName}</h3>
-                          <span className="px-[12px] py-[4px] bg-brand-gold/10 text-brand-gold rounded-full text-[8px] font-black uppercase tracking-[0.1em] border border-brand-gold/20">
+                    {/* Agent Details */}
+                    <div className="flex-1 min-w-0">
+                       <div className={`flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''} mb-[6px]`}>
+                          {/* Font size reduced and truncated to prevent line-breaks */}
+                          <h3 className="text-[24px] font-black text-white leading-none m-0 truncate pr-4">{appUser.displayName}</h3>
+                          <span className="px-[14px] py-[6px] shrink-0 bg-brand-gold/10 text-brand-gold rounded-full text-[9px] font-black uppercase tracking-[0.1em] border border-brand-gold/20">
                              {isArabic ? 'شريك عقاري معتمد' : 'Verified Estates Partner'}
                           </span>
                        </div>
-                       <p className="text-brand-gold/60 font-bold text-[10px] tracking-[0.3em] uppercase mb-[16px] leading-normal">{appUser.companyName}</p>
+                       <p className="text-brand-gold/70 font-bold text-[11px] tracking-[0.2em] uppercase mb-[20px] leading-none">{appUser.companyName}</p>
                        
-                       <div className={`grid grid-cols-2 gap-x-[32px] gap-y-[12px] pt-[16px] border-t border-white/5 ${isArabic ? 'text-right' : ''}`}>
+                       <div className={`grid grid-cols-2 gap-x-[24px] gap-y-[14px] pt-[20px] border-t border-white/10 ${isArabic ? 'text-right' : ''}`}>
                           <div className={isArabic ? 'order-2' : ''}>
-                             <p className="text-[8px] uppercase text-white/30 font-black mb-[4px]">{isArabic ? 'اتصال مباشر' : 'Direct Contact'}</p>
-                             <p className="text-white text-[14px] font-bold leading-normal m-0">{appUser.phoneNumber}</p>
+                             {/* Labels increased for readability */}
+                             <p className="text-[10px] uppercase text-white/40 font-black mb-[6px] tracking-wider">{isArabic ? 'اتصال مباشر' : 'Direct Contact'}</p>
+                             <p className="text-white text-[15px] font-bold leading-none m-0">{appUser.phoneNumber}</p>
                           </div>
                           <div className={isArabic ? 'order-1' : ''}>
-                             <p className="text-[8px] uppercase text-white/30 font-black mb-[4px]">{isArabic ? 'استعلام بالبريد' : 'Email Inquiry'}</p>
-                             <p className="text-white text-[14px] font-bold leading-normal m-0">{appUser.email}</p>
+                             <p className="text-[10px] uppercase text-white/40 font-black mb-[6px] tracking-wider">{isArabic ? 'استعلام بالبريد' : 'Email Inquiry'}</p>
+                             <p className="text-white text-[15px] font-bold leading-none m-0 truncate">{appUser.email}</p>
                           </div>
-                          <div className="col-span-2 flex justify-between items-end text-brand-gold/40 border-t border-white/5 pt-[12px]">
-                             <p className="text-[10px] font-bold uppercase tracking-widest leading-normal m-0">{appUser.reraNumber || 'PRP-29837 (Applied)'}</p>
-                             <p className="text-[8px] italic m-0">{isArabic ? 'تحقق من الرمز للحصول على التفاصيل الكاملة' : 'Scan to connect digitally'}</p>
+                          <div className="col-span-2 flex justify-between items-end text-brand-gold/50 border-t border-white/5 pt-[14px] mt-[4px]">
+                             <p className="text-[11px] font-bold uppercase tracking-widest leading-none m-0">{appUser.reraNumber || 'PRP-20837 (APPLIED)'}</p>
+                             <p className="text-[10px] italic m-0 font-medium">{isArabic ? 'تحقق من الرمز للحصول على التفاصيل الكاملة' : 'Scan to connect digitally'}</p>
                           </div>
                        </div>
                     </div>
+
                  </div>
               </div>
             )}
             
             {/* Footer Tagline */}
             <div className="pb-[32px] text-center shrink-0">
-               <p className="text-white/10 text-[8px] uppercase tracking-[0.5em] font-black m-0">
+               <p className="text-white/20 text-[10px] uppercase tracking-[0.6em] font-black m-0">
                   Crafting Modern Journeys Across Dubai's Skyline
                </p>
             </div>
