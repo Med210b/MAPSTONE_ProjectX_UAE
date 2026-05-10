@@ -44,7 +44,6 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
         scale: 2,
         windowWidth: 1000,
         onclone: (clonedDoc) => {
-          // Defuse <style> tags to prevent the html2canvas parser from crashing on oklab/oklch
           const styles = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styles.length; i++) {
             try {
@@ -59,7 +58,6 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
             }
           }
 
-          // Ensure base wrapper colors are locked in
           const pdfContent = clonedDoc.getElementById('pdf-content-wrapper');
           if (pdfContent) {
             pdfContent.style.backgroundColor = '#0b101b';
@@ -176,7 +174,7 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
         </div>
       </div>
 
-      {/* Hidden PDF container - Using STRICT inline colors and safe line-heights */}
+      {/* Hidden PDF container */}
       <div 
         className="fixed top-0 left-[-5000px] -z-50 pointer-events-none overflow-hidden" 
         style={{ 
@@ -212,8 +210,8 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                     
                   return (
                   <div key={i} className="rounded-[32px] h-full flex flex-col overflow-hidden" style={{ backgroundColor: '#121a2d', border: '1px solid rgba(255,255,255,0.05)' }}>
-                     {/* Hero Image */}
-                     <div className="relative h-[440px] shrink-0">
+                     {/* Hero Image - Height reduced to 400px to give content more vertical space */}
+                     <div className="relative h-[400px] shrink-0">
                         <img src={mainImage} alt={project.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
                         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #121a2d, rgba(0,0,0,0.4), transparent)' }}></div>
                         <div className={`absolute bottom-[36px] ${isArabic ? 'right-[44px] text-right' : 'left-[44px]'}`}>
@@ -225,13 +223,12 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                         </div>
                      </div>
                      
-                     <div className="p-[44px] flex-1 flex flex-col justify-between">
+                     <div className="p-[40px] flex-1 flex flex-col justify-between">
                         <div>
-                           {/* Quick Stats Grid */}
-                           <div className={`grid grid-cols-3 gap-[24px] mb-[40px] pb-[40px] ${isArabic ? 'text-right' : ''}`} style={{ direction: isArabic ? 'rtl' : 'ltr', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                           {/* Quick Stats Grid - Margins slightly reduced for perfect fit */}
+                           <div className={`grid grid-cols-3 gap-[24px] mb-[32px] pb-[32px] ${isArabic ? 'text-right' : ''}`} style={{ direction: isArabic ? 'rtl' : 'ltr', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                               <div className="pr-2">
                                  <p className="text-[12px] uppercase tracking-[0.2em] mb-[12px] font-black" style={{ color: 'rgba(255,255,255,0.4)' }}>Developer</p>
-                                 {/* Removed truncate, increased line-height */}
                                  <p className="text-[22px] font-bold" style={{ color: '#ffffff', lineHeight: '1.4' }}>{project.developer}</p>
                               </div>
                               <div className="pr-2">
@@ -244,19 +241,23 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                               </div>
                            </div>
 
-                          {/* Content Split */}
-                          <div className={`grid grid-cols-2 gap-[56px]`}>
+                          {/* Content Split - Aligned to "items-start" so top elements are parallel */}
+                          <div className={`grid grid-cols-2 gap-[48px] items-start`}>
                              <div className={isArabic ? 'order-2 text-right' : 'text-left'}>
-                                <h3 className="font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]" style={{ color: '#C5A059' }}>Project Masterplan</h3>
-                                <p className={`text-[14px] ${isArabic ? 'text-right' : 'text-left'}`} style={{ color: 'rgba(255,255,255,0.7)', lineHeight: '1.8' }}>
-                                  {project.description}
-                                </p>
+                                <h3 className="font-black uppercase tracking-[0.2em] text-[12px] mb-[16px]" style={{ color: '#C5A059' }}>Project Masterplan</h3>
+                                {/* Text sizing optimized and overflowing safely locked */}
+                                <div style={{ maxHeight: '145px', overflow: 'hidden' }}>
+                                  <p className={`text-[13px] ${isArabic ? 'text-right' : 'text-left'}`} style={{ color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', margin: 0 }}>
+                                    {project.description}
+                                  </p>
+                                </div>
                              </div>
                              <div className={isArabic ? 'order-1 text-right' : 'text-left'}>
-                                <h3 className="font-black uppercase tracking-[0.2em] text-[12px] mb-[20px]" style={{ color: '#C5A059' }}>World-Class Amenities</h3>
-                                <div className="grid grid-cols-2 gap-x-[20px] gap-y-[20px]">
+                                <h3 className="font-black uppercase tracking-[0.2em] text-[12px] mb-[16px]" style={{ color: '#C5A059' }}>World-Class Amenities</h3>
+                                {/* Amenities compacted to align harmoniously with the paragraph */}
+                                <div className="grid grid-cols-2 gap-x-[20px] gap-y-[14px]">
                                   {project.amenities?.slice(0, 8).map(a => (
-                                    <div key={a} className={`flex items-center gap-[12px] ${isArabic ? 'flex-row-reverse text-right' : ''} text-[13px] font-medium`} style={{ color: 'rgba(255,255,255,0.8)', lineHeight: '1.4' }}>
+                                    <div key={a} className={`flex items-center gap-[12px] ${isArabic ? 'flex-row-reverse text-right' : ''} text-[13px] font-medium`} style={{ color: 'rgba(255,255,255,0.8)', lineHeight: '1.3' }}>
                                       <ShieldCheck size={16} className="shrink-0" style={{ color: '#C5A059' }} />
                                       <span>{a}</span>
                                     </div>
@@ -295,7 +296,6 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                     {/* Agent Details */}
                     <div className="flex-1 min-w-0">
                        <div className={`flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''} mb-[10px]`}>
-                          {/* Removed truncate and leading-none, added safe line-height */}
                           <h3 className="text-[24px] font-black m-0 pr-4" style={{ color: '#ffffff', lineHeight: '1.3' }}>{appUser.displayName}</h3>
                           <span className="px-[14px] py-[6px] shrink-0 rounded-full text-[9px] font-black uppercase tracking-[0.1em]" style={{ backgroundColor: 'rgba(197,160,89,0.1)', color: '#C5A059', border: '1px solid rgba(197,160,89,0.2)' }}>
                              {isArabic ? 'شريك عقاري معتمد' : 'Verified Estates Partner'}
@@ -310,7 +310,6 @@ export function PdfGenerator({ projects, appUser, onClose }: PdfGeneratorProps) 
                           </div>
                           <div className={isArabic ? 'order-1 pr-4' : 'pr-4'}>
                              <p className="text-[10px] uppercase font-black mb-[8px] tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>{isArabic ? 'استعلام بالبريد' : 'Email Inquiry'}</p>
-                             {/* Removed truncate, added wordBreak to wrap cleanly if too long */}
                              <p className="text-[15px] font-bold m-0" style={{ color: '#ffffff', lineHeight: '1.3', wordBreak: 'break-all' }}>{appUser.email}</p>
                           </div>
                           <div className="col-span-2 flex justify-between items-end pt-[16px] mt-[4px]" style={{ color: 'rgba(197,160,89,0.5)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
