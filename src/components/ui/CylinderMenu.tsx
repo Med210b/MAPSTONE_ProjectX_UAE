@@ -74,7 +74,9 @@ export const CylinderMenu = ({ items, selectedItem, onSelect, title }: CylinderM
   }
 
   return (
-    <div className="relative w-full">
+    // FIX: Added a dynamic z-index (z-[200] when open, z-20 when closed) to force the menu to overlay the List/Map toggle
+    <div className={`relative w-full transition-all duration-300 ${isOpen ? 'z-[200]' : 'z-20'}`}>
+      
       {/* Invisible backdrop to close the menu when clicking outside */}
       <AnimatePresence>
         {isOpen && (
