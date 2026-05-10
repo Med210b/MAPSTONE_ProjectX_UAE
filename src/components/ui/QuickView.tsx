@@ -130,17 +130,18 @@ export const QuickView: React.FC<QuickViewProps> = ({ project, onClose, onViewFu
                 <div className="p-3 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5 flex flex-col justify-center min-w-0">
                   <p className="text-[7px] md:text-[10px] uppercase tracking-widest text-white/30 mb-1 md:mb-2 font-black">Price Range</p>
                   <div className="flex items-center w-full">
-                    {/* Fixed Spacing & Bold Logic */}
-                    <div className="flex flex-wrap items-baseline gap-x-1 md:gap-x-1.5 text-xs sm:text-sm md:text-base lg:text-lg luxury-heading leading-tight text-brand-gold w-full">
+                    {/* Fixed Spacing & Explicit Colors to prevent disappearing text */}
+                    <div className="flex flex-wrap items-baseline gap-x-1 md:gap-x-1.5 text-xs sm:text-sm md:text-base lg:text-lg luxury-heading leading-tight w-full">
                       {((project.priceAED ? formatPrice(project.priceAED) : project.startingPrice) || '')
                         .toString()
+                        .replace(/[\u00A0\u202F]/g, ' ') // Strips weird browser non-breaking spaces
                         .trim()
-                        .split(/[\s\u00A0]+/)
+                        .split(/\s+/)
                         .map((part, i) => (
                           <span 
                             key={i} 
-                            // If the part contains a number (\d), make it super bold and tight. Otherwise (AED), slightly smaller.
-                            className={/\d/.test(part) ? "font-black tracking-tight" : "font-bold text-[0.85em] opacity-90 uppercase"}
+                            // EXPLICIT text-brand-gold ensures the color is never lost by Tailwind compiling
+                            className={/\d/.test(part) ? "text-brand-gold font-black tracking-tight" : "text-brand-gold font-bold text-[0.85em] uppercase"}
                           >
                             {part}
                           </span>
