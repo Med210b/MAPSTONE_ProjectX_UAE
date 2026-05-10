@@ -11,8 +11,8 @@ export const EMIRATE_AREAS: Record<Emirate, string[]> = {
     'The Greens', 'The Views', 'Al Barari', 'Damac Hills', 'Damac Hills 2', 'Arabian Ranches', 'Arabian Ranches 2', 
     'Arabian Ranches 3', 'Town Square', 'Mudon', 'Remraam', 'Al Furjan', 'Discovery Gardens', 'Motor City', 
     'Sports City', 'Dubai Silicon Oasis', 'Dubailand', 'Jumeirah Golf Estates', 'Jumeirah Islands', 'Jumeirah Park', 
-    'Jumeirah 2', 'EXPO City', 'Dubai South', 'Bluewaters Island', 'Emaar South', 'Villanova', 
-    'The Valley', 'Dubai Islands', 'Maritime City', 'Pearl Jumeirah', 'La Mer', 'Port De La Mer', 'Sobha Hartland',
+    'Jumeirah 2', 'EXPO City', 'Dubai South', 'Bluewaters Island', 'Emaar South', 'Villanova', 'Dubai Science Park', 'Dubai Investement Park', 'Dubai Production City', 'Dubai International City',
+    'The Valley', 'Dubai Islands', 'Maritime City', 'Pearl Jumeirah', 'La Mer', 'Port De La Mer', 'Sobha Hartland', 'Zabeel',
     'Sobha Hartland 2', 'Nshama', 'Arjan', 'Liwan', 'International City', 'Silicon Oasis', 'Al Barsha', 'Umm Suqeim'
   ],
   'Abu Dhabi': [
